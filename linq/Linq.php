@@ -38,9 +38,9 @@ class Linq
     {
         $iterator = $this->toGenerator();
         $data = [];
-        foreach ($iterator as $item) {
+        foreach ($iterator as $index => $item) {
             if ($map != null) {
-                $item = $map($item);
+                $item = $map($item, $index);
             }
             if (is_array($item) && $this->fields) {
                 $item = $this->array_filter_field($item, $this->fields);
