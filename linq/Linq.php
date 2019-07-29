@@ -56,8 +56,8 @@ class Linq
             $fields = explode(',', $fields);
         }
         $data = [];
-        foreach ($fields as $k => $v) {
-            $data[$v] = $obj[$v];
+        foreach ($fields as $field) {
+            $data[$field] = $obj[$field];
         }
         return $data;
     }
