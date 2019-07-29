@@ -5,7 +5,9 @@ namespace linq;
 class Linq
 {
     private $data;
-    private $fields = [];
+    private $defaultColumnName = '_it';
+    private $alias;
+    private $fields;
     private $wheres = [];
 
     public function __construct($array)
@@ -16,6 +18,17 @@ class Linq
     public static function from($array)
     {
         return new Linq($array);
+    }
+
+    public function defaultColumnName($name)
+    {
+        $this->defaultColumnName = $name;
+    }
+
+    public function alias($alias)
+    {
+        $this->alias = $alias;
+        return $this;
     }
 
     public function field($field)
@@ -48,6 +61,11 @@ class Linq
             $data[] = $item;
         }
         return $data;
+    }
+
+    public function join($array, $alias, $on, $type = 'INNER')
+    {
+        return $this;
     }
 
     private function array_filter_field($obj, $fields)
@@ -106,10 +124,10 @@ class Linq
         foreach ($this->wheres as $where) {
             if ($where[0] instanceof \Closure) {
                 $check = $where[0]($item, $index);
-            } else if ($where[0] === null) {
-                $check = $this->checkOp($item, $where[1], $where[2]);
+            } else if ($where[0] === $this->defaultColumnName) {
+                $check = $this->checkWhereOp($item, $where[1], $where[2]);
             } else {
-                $check = $this->checkOp($item[$where[0]], $where[1], $where[2]);
+                $check = $this->checkWhereOp($item[$where[0]], $where[1], $where[2]);
             }
             if (!$check) {
                 return false;
@@ -118,7 +136,7 @@ class Linq
         return true;
     }
 
-    private function checkOp($field, $op, $value)
+    private function checkWhereOp($field, $op, $value)
     {
         switch ($op) {
             case '=':
