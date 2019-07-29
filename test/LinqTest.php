@@ -11,19 +11,14 @@ class LinqTest extends TestCase
     {
         $numbers = [5, 4, 1, 3, 9, 8, 6, 7, 2, 0];
 
-        $lowNums = Linq::from($numbers)
-            ->where('_it', '<', 5)
-            ->select();
-
-        $lowNums2 = Linq::from($numbers)
+        $test = Linq::from($numbers)
             ->where(function ($it) {
                 return $it < 5;
             })
             ->select();
 
         $result = [4, 1, 3, 2, 0];
-        $this->assertEquals(json_encode($result), json_encode($lowNums));
-        $this->assertEquals(json_encode($result), json_encode($lowNums2));
+        $this->assertEquals(json_encode($result), json_encode($test));
     }
 
     // linq2: Where - Simple 2
@@ -34,11 +29,7 @@ class LinqTest extends TestCase
             ['name' => 'P2', 'price' => 80, 'amount' => 0,],
         ];
 
-        $products1 = Linq::from($products)
-            ->where('amount', '=', 0)
-            ->select();
-
-        $products2 = Linq::from($products)
+        $test = Linq::from($products)
             ->where(function ($it) {
                 return $it['amount'] == 0;
             })
@@ -47,8 +38,7 @@ class LinqTest extends TestCase
         $result = [
             ['name' => 'P2', 'price' => 80, 'amount' => 0,],
         ];
-        $this->assertEquals(json_encode($result), json_encode($products1));
-        $this->assertEquals(json_encode($result), json_encode($products2));
+        $this->assertEquals(json_encode($result), json_encode($test));
     }
 
     // linq3: Where - Simple 3
@@ -60,12 +50,7 @@ class LinqTest extends TestCase
             ['name' => 'P3', 'price' => 100, 'amount' => 0,],
         ];
 
-        $products1 = Linq::from($products)
-            ->where('amount', '=', 0)
-            ->where('price', '>', 80)
-            ->select();
-
-        $products2 = Linq::from($products)
+        $test = Linq::from($products)
             ->where(function ($it) {
                 return $it['amount'] == 0 && $it['price'] > 80;
             })
@@ -74,8 +59,7 @@ class LinqTest extends TestCase
         $result = [
             ['name' => 'P3', 'price' => 100, 'amount' => 0,],
         ];
-        $this->assertEquals(json_encode($result), json_encode($products1));
-        $this->assertEquals(json_encode($result), json_encode($products2));
+        $this->assertEquals(json_encode($result), json_encode($test));
     }
 
     // linq4: Where - Drilldown
@@ -87,11 +71,7 @@ class LinqTest extends TestCase
             ['name' => 'P3', 'price' => 100, 'amount' => 0,],
         ];
 
-        $products1 = Linq::from($products)
-            ->where('name', '=', 'P1')
-            ->select();
-
-        $products2 = Linq::from($products)
+        $test = Linq::from($products)
             ->where(function ($it) {
                 return $it['name'] == 'P1';
             })
@@ -100,8 +80,7 @@ class LinqTest extends TestCase
         $result = [
             ['name' => 'P1', 'price' => 100, 'amount' => 10,],
         ];
-        $this->assertEquals(json_encode($result), json_encode($products1));
-        $this->assertEquals(json_encode($result), json_encode($products2));
+        $this->assertEquals(json_encode($result), json_encode($test));
     }
 
     // linq5: Where - Indexed
@@ -123,6 +102,7 @@ class LinqTest extends TestCase
     public function testLinq6()
     {
         $numbers = [5, 4, 1, 3, 9, 8, 6, 7, 2, 0];
+
         $test = Linq::from($numbers)
             ->select(function ($it) {
                 return $it + 1;
@@ -141,8 +121,9 @@ class LinqTest extends TestCase
         ];
 
         $test = Linq::from($products)
-            ->field('name')
-            ->select();
+            ->select(function ($it) {
+                return ['name' => $it['name']];
+            });
 
         $result = [
             ['name' => 'P1'],
@@ -258,7 +239,9 @@ class LinqTest extends TestCase
         $digits = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
 
         $test = Linq::from($numbers)
-            ->where('_it', '<', 5)
+            ->where(function ($it) {
+                return $it < 5;
+            })
             ->select(function ($it) use ($digits) {
                 return $digits[$it];
             });
