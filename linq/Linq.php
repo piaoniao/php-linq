@@ -2,60 +2,73 @@
 
 namespace linq;
 
+
 class Linq
 {
-    private $data;
+    private $iterator;
     /**
      * @var \Closure
      */
     private $where;
 
-    public function __construct($array)
+    private $joins;
+
+    public function __construct($source)
     {
-        $this->data = $array;
+        if (!is_array($source)) {
+            throw new \InvalidArgumentException();
+        }
+        $this->iterator = new \ArrayIterator($source);
     }
 
-    public static function from($array)
+    public static function from($source)
     {
-        return new Linq($array);
+        return new Linq($source);
     }
 
-    public function where(\Closure $condition)
+    public function where(\Closure $predicate)
     {
-        $this->where = $condition;
+        $this->where = $predicate;
         return $this;
     }
 
     public function select(\Closure $map = null)
     {
-        $iterator = $this->toGenerator();
         $data = [];
-        foreach ($iterator as $index => $item) {
-            if ($map != null) {
-                $item = $map($item, $index);
+        foreach ($this->iterator as $index => $item) {
+            if ($this->where) {
+                if (!call_user_func($this->where, $item, $index)) {
+                    continue;
+                }
             }
-            $data[] = $item;
+            if ($this->joins) {
+                // 暂时只能 1 层
+                foreach ($this->joins['data'] as $joinItem) {
+                    if (!call_user_func($this->joins['on'], $item, $joinItem)) {
+                        continue;
+                    }
+                    if ($map != null) {
+                        $newItem = $map($item, $joinItem);
+                        $data[] = $newItem;
+                    }
+                }
+            } else {
+                if ($map != null) {
+                    $item = $map($item, $index);
+                }
+                $data[] = $item;
+            }
         }
         return $data;
     }
 
     public function join($array, $on)
     {
-
-    }
-
-    /**
-     * @return \Generator
-     */
-    private function toGenerator()
-    {
-        foreach ($this->data as $index => $item) {
-            if ($this->where) {
-                if (!call_user_func($this->where, $item, $index)) {
-                    continue;
-                }
-            }
-            yield $item;
-        }
+        $this->joins = [
+            'type' => 'INNER',
+            'data' => $array,
+            'on'   => $on,
+        ];
+        return $this;
     }
 }
