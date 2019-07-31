@@ -104,9 +104,10 @@ class LinqTest extends TestCase
         $numbers = [5, 4, 1, 3, 9, 8, 6, 7, 2, 0];
 
         $test = Linq::from($numbers)
-            ->select(function ($it) {
+            ->map(function ($it) {
                 return $it + 1;
-            });
+            })
+            ->select();
 
         $result = [6, 5, 2, 4, 10, 9, 7, 8, 3, 1];
         $this->assertEquals(json_encode($result), json_encode($test));
@@ -121,9 +122,10 @@ class LinqTest extends TestCase
         ];
 
         $test = Linq::from($products)
-            ->select(function ($it) {
+            ->map(function ($it) {
                 return ['name' => $it['name']];
-            });
+            })
+            ->select();
 
         $result = [
             ['name' => 'P1'],
@@ -139,9 +141,10 @@ class LinqTest extends TestCase
         $strings = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
 
         $test = Linq::from($numbers)
-            ->select(function ($it) use ($strings) {
+            ->map(function ($it) use ($strings) {
                 return $strings[$it];
-            });
+            })
+            ->select();
 
         $result = ['five', 'four', 'one', 'three', 'nine', 'eight', 'six', 'seven', 'two', 'zero',];
         $this->assertEquals(json_encode($result), json_encode($test));
@@ -153,12 +156,13 @@ class LinqTest extends TestCase
         $words = ["aPPLE", "BlUeBeRrY", "cHeRry"];
 
         $test = Linq::from($words)
-            ->select(function ($it) {
+            ->map(function ($it) {
                 return [
                     'Upper' => strtoupper($it),
                     'Lower' => strtolower($it),
                 ];
-            });
+            })
+            ->select();
 
         $result = [
             ['Upper' => 'APPLE', 'Lower' => 'apple'],
@@ -175,12 +179,13 @@ class LinqTest extends TestCase
         $strings = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
 
         $test = Linq::from($numbers)
-            ->select(function ($it) use ($strings) {
+            ->map(function ($it) use ($strings) {
                 return [
                     'Digit' => $strings[$it],
                     'Even'  => $it % 2 == 0 ? 1 : 0,
                 ];
-            });
+            })
+            ->select();
 
         $result = [
             ['Digit' => 'five', 'Even' => 0],
@@ -210,12 +215,13 @@ class LinqTest extends TestCase
         $numbers = [5, 4, 1, 3, 9, 8, 6, 7, 2, 0];
 
         $test = Linq::from($numbers)
-            ->select(function ($it, $index) {
+            ->map(function ($it, $index) {
                 return [
                     'Num'     => $it,
                     'InPlace' => $it == $index ? 1 : 0,
                 ];
-            });
+            })
+            ->select();
 
         $result = [
             ['Num' => 5, 'InPlace' => 0],
@@ -242,9 +248,10 @@ class LinqTest extends TestCase
             ->where(function ($it) {
                 return $it < 5;
             })
-            ->select(function ($it) use ($digits) {
+            ->map(function ($it) use ($digits) {
                 return $digits[$it];
-            });
+            })
+            ->select();
 
         $result = ['four', 'one', 'three', 'two', 'zero',];
         $this->assertEquals(json_encode($result), json_encode($test));
@@ -260,9 +267,10 @@ class LinqTest extends TestCase
             ->join($numbersB, function ($left, $right) {
                 return $left < $right;
             })
-            ->select(function ($left, $right) {
-                return ['a' => $left, 'b' => $right];
-            });
+            ->map(function ($item) {
+                return ['a' => $item[0], 'b' => $item[1]];
+            })
+            ->select();
 
         $result = [
             ['a' => 0, 'b' => 1], ['a' => 0, 'b' => 3], ['a' => 0, 'b' => 5], ['a' => 0, 'b' => 7], ['a' => 0, 'b' => 8],

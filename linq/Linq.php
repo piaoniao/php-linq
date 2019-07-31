@@ -6,12 +6,6 @@ namespace linq;
 class Linq
 {
     private $iterator;
-    /**
-     * @var \Closure
-     */
-    private $where;
-
-    private $joins;
 
     public function __construct($source)
     {
@@ -28,47 +22,42 @@ class Linq
 
     public function where(\Closure $predicate)
     {
-        $this->where = $predicate;
+        $this->iterator = Utils::where($this->iterator, $predicate);
         return $this;
     }
 
-    public function select(\Closure $map = null)
+    public function map(\Closure $closure)
+    {
+        $this->iterator = Utils::map($this->iterator, $closure);
+        return $this;
+    }
+
+    public function join($array, $on, $type = 'INNER')
+    {
+        if (!is_array($array)) {
+            throw new \InvalidArgumentException();
+        }
+        $this->iterator = $this->joinOp($this->iterator, $array, $on, $type);
+        return $this;
+    }
+
+    private function joinOp($left, $right, $on, $type = 'INNER')
+    {
+        foreach ($left as $lk => $lv) {
+            foreach ($right as $rl => $rv) {
+                if (call_user_func($on, $lv, $rv)) {
+                    yield [$lv, $rv];
+                }
+            }
+        }
+    }
+
+    public function select()
     {
         $data = [];
         foreach ($this->iterator as $index => $item) {
-            if ($this->where) {
-                if (!call_user_func($this->where, $item, $index)) {
-                    continue;
-                }
-            }
-            if ($this->joins) {
-                // 暂时只能 1 层
-                foreach ($this->joins['data'] as $joinItem) {
-                    if (!call_user_func($this->joins['on'], $item, $joinItem)) {
-                        continue;
-                    }
-                    if ($map != null) {
-                        $newItem = $map($item, $joinItem);
-                        $data[] = $newItem;
-                    }
-                }
-            } else {
-                if ($map != null) {
-                    $item = $map($item, $index);
-                }
-                $data[] = $item;
-            }
+            $data[] = $item;
         }
         return $data;
-    }
-
-    public function join($array, $on)
-    {
-        $this->joins = [
-            'type' => 'INNER',
-            'data' => $array,
-            'on'   => $on,
-        ];
-        return $this;
     }
 }
