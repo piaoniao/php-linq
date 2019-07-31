@@ -41,6 +41,13 @@ class Linq
         return $this;
     }
 
+
+    public function limit($count)
+    {
+        $this->iterator = Utils::limit($this->iterator, $count);
+        return $this;
+    }
+
     public function select()
     {
         $data = [];

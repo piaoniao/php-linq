@@ -43,4 +43,17 @@ class Utils
             }
         }
     }
+
+    public static function limit($iterator, $count)
+    {
+        $c = 0;
+        foreach ($iterator as $item) {
+            $c++;
+            if ($c <= $count) {
+                yield $item;
+            } else {
+                break;
+            }
+        }
+    }
 }

@@ -265,11 +265,14 @@ class LinqTest extends TestCase
 
         $test = Linq::from($numbersA)
             ->join($numbersB, function ($left, $right) {
+                var_dump($left);
                 return $left < $right;
             })
             ->map(function ($item) {
+                var_dump($item);
                 return ['a' => $item[0], 'b' => $item[1]];
             })
+            ->limit(3)
             ->select();
 
         $result = [
