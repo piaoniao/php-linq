@@ -37,19 +37,8 @@ class Linq
         if (!is_array($array)) {
             throw new \InvalidArgumentException();
         }
-        $this->iterator = $this->joinOp($this->iterator, $array, $on, $type);
+        $this->iterator = Utils::join($this->iterator, $array, $on, $type);
         return $this;
-    }
-
-    private function joinOp($left, $right, $on, $type = 'INNER')
-    {
-        foreach ($left as $lk => $lv) {
-            foreach ($right as $rl => $rv) {
-                if (call_user_func($on, $lv, $rv)) {
-                    yield [$lv, $rv];
-                }
-            }
-        }
     }
 
     public function select()

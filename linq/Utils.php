@@ -32,4 +32,15 @@ class Utils
             yield call_user_func($closure, $item, $index);
         }
     }
+
+    public function join($left, $right, $on, $type = 'INNER')
+    {
+        foreach ($left as $lk => $lv) {
+            foreach ($right as $rl => $rv) {
+                if (call_user_func($on, $lv, $rv)) {
+                    yield [$lv, $rv];
+                }
+            }
+        }
+    }
 }
