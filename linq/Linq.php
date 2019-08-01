@@ -104,4 +104,16 @@ class Linq
 
         return $default;
     }
+
+    public function last($default = null)
+    {
+        $value = $default;
+        foreach ($this->iterator as $item) {
+            $value = $item;
+        }
+
+        return $value;
+    }
+
+    
 }
