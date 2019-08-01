@@ -282,5 +282,17 @@ class LinqTest extends TestCase
         $this->assertEquals(json_encode($result), json_encode($test));
     }
 
+    // page
+    public function testPage()
+    {
+        $numbers = [5, 4, 1, 3, 9, 8, 6, 7, 2, 0];
+
+        $test = Linq::from($numbers)
+            ->page(2, 6)
+            ->select();
+
+        $this->assertEquals($test, [6, 7, 2,0]);
+    }
+
 
 }

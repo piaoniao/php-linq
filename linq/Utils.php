@@ -49,6 +49,28 @@ class Utils
         }
     }
 
+    public static function page($iterator, $page, $pageSize)
+    {
+        if ($pageSize <= 0) {
+            throw new \InvalidArgumentException();
+        }
+        if ($page <= 0) {
+            $page = 1;
+        }
+        $start = ($page - 1) * $pageSize;
+        $end = $page * $pageSize - 1;
+        $crr = 0;
+        foreach ($iterator as $item) {
+            if ($crr > $end) {
+                break;
+            }
+            if ($start <= $crr && $crr <= $end) {
+                yield $item;
+            }
+            $crr++;
+        }
+    }
+
     public static function limit($iterator, $count)
     {
         $c = 0;

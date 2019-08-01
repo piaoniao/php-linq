@@ -50,6 +50,11 @@ class Linq
         return $this;
     }
 
+    public function page($page, $pageSize)
+    {
+        $this->iterator = Utils::page($this->iterator, $page, $pageSize);
+        return $this;
+    }
 
     public function limit($count)
     {
