@@ -83,4 +83,23 @@ class Utils
             }
         }
     }
+
+    public static function distinct($iterator, \Closure $keySelector)
+    {
+        $set = [];
+        foreach ($iterator as $index => $item) {
+            $key = $keySelector($index, $item);
+            if (isset($set[$key])) {
+                continue;
+            }
+            $set[$key] = true;
+            yield $item;
+        }
+    }
+
+    public static function concat($iterator, array $array)
+    {
+        yield from $iterator;
+        yield from $array;
+    }
 }

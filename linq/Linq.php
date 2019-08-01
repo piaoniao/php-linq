@@ -115,5 +115,75 @@ class Linq
         return $value;
     }
 
-    
+    public function union()
+    {
+
+    }
+
+    public function intersect()
+    {
+
+    }
+
+    public function distinct(\Closure $keySelector)
+    {
+        $this->iterator = Utils::distinct($this->iterator, $keySelector);
+        return $this;
+    }
+
+    public function concat($array)
+    {
+        if (!is_array($array) && !$array instanceof \ArrayIterator) {
+            throw new \InvalidArgumentException();
+        }
+        $this->iterator = Utils::concat($this->iterator, $array);
+        return $this;
+    }
+
+    public function sum(\Closure $selector = null)
+    {
+        $sum = 0;
+        foreach ($this as $index => $item) {
+            if ($selector == null) {
+                $sum += $item;
+            } else {
+                $sum += $selector($item, $index);
+            }
+        }
+        return $sum;
+    }
+
+    public function min($selector = null)
+    {
+
+    }
+
+    public function max($selector = null)
+    {
+
+    }
+
+    public function average(\Closure $selector = null)
+    {
+        $sum = $count = 0;
+        foreach ($this->iterator as $index => $item) {
+            $sum += $selector($item, $index);
+            $count++;
+        }
+        if ($count === 0) {
+            throw new \UnexpectedValueException();
+        }
+        return $sum / $count;
+    }
+
+    public function group()
+    {
+
+    }
+
+    public function order()
+    {
+        
+    }
+
 }
