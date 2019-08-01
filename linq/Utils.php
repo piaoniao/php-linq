@@ -33,7 +33,7 @@ class Utils
         }
     }
 
-    public static function join($left, $right, $on, $strategy)
+    public static function join($left, $right, $on, $result, $strategy)
     {
         foreach ($left as $lk => $lv) {
             $isFound = false;
@@ -43,7 +43,7 @@ class Utils
                 }
                 $isFound = call_user_func($on, $lv, $rv, $lk, $rk);
                 if ($isFound) {
-                    yield [$lv, $rv];
+                    yield call_user_func($result, $lv, $rv, $lk, $rk);
                 }
             }
         }

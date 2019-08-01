@@ -264,12 +264,12 @@ class LinqTest extends TestCase
         $numbersB = [1, 3, 5, 7, 8];
 
         $test = Linq::from($numbersA)
-            ->join($numbersB, function ($left, $right) {
-                return $left < $right;
-            })
-            ->map(function ($item) {
-                return ['a' => $item[0], 'b' => $item[1]];
-            })
+            ->join($numbersB,
+                function ($left, $right) {
+                    return $left < $right;
+                }, function ($left, $right) {
+                    return ['a' => $left, 'b' => $right];
+                })
             ->select();
 
         $result = [
@@ -291,8 +291,29 @@ class LinqTest extends TestCase
             ->page(2, 6)
             ->select();
 
-        $this->assertEquals($test, [6, 7, 2,0]);
+        $this->assertEquals($test, [6, 7, 2, 0]);
     }
 
+    // all
+    public function testAll()
+    {
+        $numbers = [5, 4, 1, 3, 9, 8, 6, 7, 2, 10];
+
+        $test = Linq::from($numbers)->all(function ($it) {
+            return $it >= 1;
+        });
+
+        $this->assertEquals($test, true);
+    }
+
+    // first
+    public function testFirst()
+    {
+        $numbers = [];
+
+        $test = Linq::from($numbers)->first(1);
+
+        $this->assertEquals($test, 1);
+    }
 
 }

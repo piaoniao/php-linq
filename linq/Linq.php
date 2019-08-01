@@ -41,12 +41,12 @@ class Linq
         return $this;
     }
 
-    public function join($array, $on, $strategy = Constants::JOIN_NORMAL)
+    public function join($array, \Closure $on, \Closure $result, $strategy = Constants::JOIN_NORMAL)
     {
         if (!is_array($array) && !$array instanceof \ArrayIterator) {
             throw new \InvalidArgumentException();
         }
-        $this->iterator = Utils::join($this->iterator, $array, $on, $strategy);
+        $this->iterator = Utils::join($this->iterator, $array, $on, $result, $strategy);
         return $this;
     }
 
@@ -74,5 +74,34 @@ class Linq
     public function find()
     {
         return $this->limit(1)->select();
+    }
+
+    public function all(\Closure $predicate)
+    {
+        foreach ($this->iterator as $index => $item) {
+            if (!call_user_func($predicate, $item, $index)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public function any(\Closure $predicate)
+    {
+        foreach ($this->iterator as $index => $item) {
+            if (call_user_func($predicate, $item, $index)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function first($default = null)
+    {
+        foreach ($this->iterator as $item) {
+            return $item;
+        }
+
+        return $default;
     }
 }
