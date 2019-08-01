@@ -15,6 +15,15 @@ class Linq
         $this->iterator = new \ArrayIterator($source);
     }
 
+    public function toArrayIterator()
+    {
+        if ($this->iterator instanceof \ArrayIterator) {
+            return $this->iterator;
+        } else {
+            return new \ArrayIterator($this->iterator);
+        }
+    }
+
     public static function from($source)
     {
         return new Linq($source);
@@ -34,7 +43,7 @@ class Linq
 
     public function join($array, $on, $type = 'INNER')
     {
-        if (!is_array($array)) {
+        if (!is_array($array) && !$array instanceof \ArrayIterator) {
             throw new \InvalidArgumentException();
         }
         $this->iterator = Utils::join($this->iterator, $array, $on, $type);

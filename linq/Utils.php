@@ -33,7 +33,7 @@ class Utils
         }
     }
 
-    public static function join($left, $right, $on, $type = 'INNER')
+    public static function join($left,$right, $on, $type = 'INNER')
     {
         foreach ($left as $lk => $lv) {
             foreach ($right as $rk => $rv) {

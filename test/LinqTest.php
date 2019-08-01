@@ -263,13 +263,17 @@ class LinqTest extends TestCase
         $numbersA = [0, 2, 4, 5, 6, 8, 9];
         $numbersB = [1, 3, 5, 7, 8];
 
+        $numbersBIterator = Linq::from($numbersB)
+            ->where(function ($it) {
+                return $it > 5;
+            })
+            ->toArrayIterator();
+
         $test = Linq::from($numbersA)
-            ->join($numbersB, function ($left, $right) {
-                var_dump($left);
+            ->join($numbersBIterator, function ($left, $right) {
                 return $left < $right;
             })
             ->map(function ($item) {
-                var_dump($item);
                 return ['a' => $item[0], 'b' => $item[1]];
             })
             ->limit(3)
