@@ -33,11 +33,16 @@ class Utils
         }
     }
 
-    public static function join($left,$right, $on, $type = 'INNER')
+    public static function join($left, $right, $on, $strategy)
     {
         foreach ($left as $lk => $lv) {
+            $isFound = false;
             foreach ($right as $rk => $rv) {
-                if (call_user_func($on, $lv, $rv, $lk, $rk)) {
+                if ($isFound && $strategy == Constants::JOIN_UNIQUE) {
+                    break;
+                }
+                $isFound = call_user_func($on, $lv, $rv, $lk, $rk);
+                if ($isFound) {
                     yield [$lv, $rv];
                 }
             }

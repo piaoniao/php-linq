@@ -41,12 +41,12 @@ class Linq
         return $this;
     }
 
-    public function join($array, $on, $type = 'INNER')
+    public function join($array, $on, $strategy = Constants::JOIN_NORMAL)
     {
         if (!is_array($array) && !$array instanceof \ArrayIterator) {
             throw new \InvalidArgumentException();
         }
-        $this->iterator = Utils::join($this->iterator, $array, $on, $type);
+        $this->iterator = Utils::join($this->iterator, $array, $on, $strategy);
         return $this;
     }
 
@@ -60,9 +60,14 @@ class Linq
     public function select()
     {
         $data = [];
-        foreach ($this->iterator as $index => $item) {
+        foreach ($this->iterator as $item) {
             $data[] = $item;
         }
         return $data;
+    }
+
+    public function find()
+    {
+        return $this->limit(1)->select();
     }
 }
