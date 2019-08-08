@@ -79,7 +79,7 @@ class Linq
     public function all(\Closure $predicate)
     {
         foreach ($this->iterator as $index => $item) {
-            if (!call_user_func($predicate, $item, $index)) {
+            if (!$predicate($item, $index)) {
                 return false;
             }
         }
@@ -89,7 +89,7 @@ class Linq
     public function any(\Closure $predicate)
     {
         foreach ($this->iterator as $index => $item) {
-            if (call_user_func($predicate, $item, $index)) {
+            if ($predicate($item, $index)) {
                 return true;
             }
         }
@@ -101,7 +101,6 @@ class Linq
         foreach ($this->iterator as $item) {
             return $item;
         }
-
         return $default;
     }
 
@@ -111,7 +110,6 @@ class Linq
         foreach ($this->iterator as $item) {
             $value = $item;
         }
-
         return $value;
     }
 
@@ -153,21 +151,51 @@ class Linq
         return $sum;
     }
 
-    public function min($selector = null)
+    public function min(\Closure $selector = null)
     {
-
+        $min = PHP_INT_MAX;
+        $found = false;
+        foreach ($this as $index => $item) {
+            if ($selector == null) {
+                $min = min($min, $item);
+            } else {
+                $min = min($min, $selector($item, $index));
+            }
+            $found = true;
+        }
+        if (!$found) {
+            throw new \UnexpectedValueException();
+        }
+        return $min;
     }
 
-    public function max($selector = null)
+    public function max(\Closure $selector = null)
     {
-
+        $max = PHP_INT_MIN;
+        $found = false;
+        foreach ($this as $index => $item) {
+            if ($selector == null) {
+                $max = max($max, $item);
+            } else {
+                $max = max($max, $selector($item, $index));
+            }
+            $found = true;
+        }
+        if (!$found) {
+            throw new \UnexpectedValueException();
+        }
+        return $max;
     }
 
     public function average(\Closure $selector = null)
     {
         $sum = $count = 0;
         foreach ($this->iterator as $index => $item) {
-            $sum += $selector($item, $index);
+            if ($selector == null) {
+                $sum += $item;
+            } else {
+                $sum += $selector($item, $index);
+            }
             $count++;
         }
         if ($count === 0) {
