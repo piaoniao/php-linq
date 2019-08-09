@@ -113,14 +113,28 @@ class Linq
         return $value;
     }
 
-    public function union()
+    public function union($other, \Closure $keySelector)
     {
-
+        $this->iterator = Utils::union($this->iterator, $other, $keySelector);
+        return $this;
     }
 
-    public function intersect()
+    public function intersect($other, \Closure $keySelector)
     {
+        $this->iterator = Utils::intersect($this->iterator, $other, $keySelector);
+        return $this;
+    }
 
+    public function except($other, \Closure $keySelector)
+    {
+        $this->iterator = Utils::except($this->iterator, $other, $keySelector);
+        return $this;
+    }
+
+    public function prepend($item)
+    {
+        $this->iterator = Utils::prepend($this->iterator, $item);
+        return $this;
     }
 
     public function distinct(\Closure $keySelector)

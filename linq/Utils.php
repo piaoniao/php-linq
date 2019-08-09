@@ -102,4 +102,64 @@ class Utils
         yield from $iterator;
         yield from $array;
     }
+
+    public static function union($iterator, $other, \Closure $keySelector)
+    {
+        $set = [];
+        foreach ($iterator as $index => $item) {
+            $key = $keySelector($item, $index);
+            if (isset($set[$key])) {
+                continue;
+            }
+            $set[$key] = true;
+            yield $item;
+        }
+        foreach ($other as $index => $item) {
+            $key = $keySelector($item, $index);
+            if (isset($set[$key])) {
+                continue;
+            }
+            $set[$key] = true;
+            yield $item;
+        }
+    }
+
+    public static function intersect($iterator, $other, \Closure $keySelector)
+    {
+        $set = [];
+        foreach ($iterator as $index => $item) {
+            $key = $keySelector($item, $index);
+            $set[$key] = true;
+        }
+        foreach ($other as $index => $item) {
+            $key = $keySelector($item, $index);
+            if (!isset($set[$key])) {
+                continue;
+            }
+            unset($set[$key]);
+            yield $item;
+        }
+    }
+
+    public static function except($iterator, $other, \Closure $keySelector)
+    {
+        $set = [];
+        foreach ($other as $index => $item) {
+            $key = $keySelector($item, $index);
+            $set[$key] = true;
+        }
+        foreach ($iterator as $index => $item) {
+            $key = $keySelector($item, $index);
+            if (isset($set[$key])) {
+                continue;
+            }
+            yield $item;
+        }
+    }
+
+    public static function prepend($iterator, $item)
+    {
+        yield $item;
+        yield from $iterator;
+    }
 }
