@@ -234,9 +234,18 @@ class Linq
         return $sum / $count;
     }
 
+    public function aggregate(\Closure $closure, $seed = null)
+    {
+        $result = $seed;
+        foreach ($this->iterator as $index => $item) {
+            $result = $closure($result, $item, $index);
+        }
+        return $result;
+    }
+
     public function group()
     {
-
+        
     }
 
     public function order()
