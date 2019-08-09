@@ -76,6 +76,16 @@ class Linq
         return $this->limit(1)->select();
     }
 
+    public function contains($value)
+    {
+        foreach ($this->iterator as $index => $item) {
+            if ($value === $item) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public function all(\Closure $predicate)
     {
         foreach ($this->iterator as $index => $item) {
@@ -134,6 +144,12 @@ class Linq
     public function prepend($item)
     {
         $this->iterator = Utils::prepend($this->iterator, $item);
+        return $this;
+    }
+
+    public function append($item)
+    {
+        $this->iterator = Utils::append($this->iterator, $item);
         return $this;
     }
 
@@ -226,6 +242,25 @@ class Linq
     public function order()
     {
 
+    }
+
+    public function count(\Closure $predicate = null): int
+    {
+        if ($this->iterator instanceof \Countable && $predicate === null) {
+            return count($this->iterator);
+        }
+
+        $count = 0;
+        foreach ($this->iterator as $k => $v) {
+            if ($predicate == null) {
+                $count++;
+            } else {
+                if ($predicate($v, $k)) {
+                    $count++;
+                }
+            }
+        }
+        return $count;
     }
 
 }

@@ -162,4 +162,10 @@ class Utils
         yield $item;
         yield from $iterator;
     }
+
+    public static function append($iterator, $item)
+    {
+        yield from $iterator;
+        yield $item;
+    }
 }
