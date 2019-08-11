@@ -1,14 +1,21 @@
 {
-  "require-dev": {
-    "phpunit/phpunit": "^8.2"
-  },
+  "name": "piaoniao/php-linq",
+  "description": "linq for PHP.",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "piaoniao",
+      "email": "1254103781@qq.com"
+    }
+  ],
   "require": {
-    "ext-json": "*"
+    "php": ">=7.0"
   },
+  "minimum-stability": "stable",
   "autoload": {
     "psr-4": {
-      "linq\\": "linq/",
-      "test\\": "test/"
+      "linq\\": "linq/"
     }
   }
 }
