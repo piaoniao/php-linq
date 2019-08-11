@@ -243,16 +243,6 @@ class Linq
         return $result;
     }
 
-    public function group()
-    {
-        
-    }
-
-    public function order()
-    {
-
-    }
-
     public function count(\Closure $predicate = null): int
     {
         if ($this->iterator instanceof \Countable && $predicate === null) {
