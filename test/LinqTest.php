@@ -257,19 +257,20 @@ class LinqTest extends TestCase
         $this->assertEquals(json_encode($result), json_encode($test));
     }
 
-    // linq14: SelectMany - Compound from 1
-    public function testLinq14()
+    // linq14: Join (INNER LEFT RIGHT FULL)
+    public function testJoin()
     {
-        $numbersA = [0, 2, 4, 5, 6, 8, 9];
-        $numbersB = [1, 3, 5, 7, 8];
+        $numbersA = [0, 2, 4, 5, 6];
+        $numbersB = [-1, 1, 3, 5, 7, 8];
 
         $test = Linq::from($numbersA)
             ->join($numbersB,
                 function ($left, $right) {
                     return $left < $right;
-                }, function ($left, $right) {
+                },
+                function ($left, $right) {
                     return ['a' => $left, 'b' => $right];
-                })
+                }, 'LEFT')
             ->select();
 
         $result = [
@@ -279,6 +280,52 @@ class LinqTest extends TestCase
             ['a' => 5, 'b' => 7], ['a' => 5, 'b' => 8],
             ['a' => 6, 'b' => 7], ['a' => 6, 'b' => 8],
         ];
+        $this->assertEquals(json_encode($result), json_encode($test));
+    }
+
+    // group 1
+    public function testGroup1()
+    {
+        $source = [1, 3, 5, 7, 9];
+        $test = Linq::from($source)
+            ->group(
+                function ($item) {
+                    return $item % 4;
+                },
+                function ($item) {
+                    return $item;
+                }
+            )
+            ->select();
+
+        $result = [1, 3];
+
+        $this->assertEquals(json_encode($result), json_encode($test));
+    }
+
+    // group 2
+    public function testGroup2()
+    {
+        $source = [
+            ['id' => 1, 'name' => 'a'],
+            ['id' => 2, 'name' => 'b'],
+            ['id' => 3, 'name' => 'c'],
+            ['id' => 1, 'name' => 'd2'],
+            ['id' => 2, 'name' => 'd2'],
+        ];
+        $test = Linq::from($source)
+            ->group(
+                function ($item) {
+                    return $item['name'];
+                },
+                function ($item) {
+                    return $item['name'];
+                }
+            )
+            ->select();
+
+        $result = ['a', 'b', 'c', 'd2'];
+
         $this->assertEquals(json_encode($result), json_encode($test));
     }
 
@@ -314,6 +361,19 @@ class LinqTest extends TestCase
         $test = Linq::from($numbers)->first(1);
 
         $this->assertEquals($test, 1);
+    }
+
+    // range
+    public function testRange()
+    {
+        $test = Linq::range(1, 5, 2)
+            ->where(function ($it) {
+                return $it < 6;
+            })
+            ->select();
+
+        $result = [1, 3, 5];
+        $this->assertEquals(json_encode($result), json_encode($test));
     }
 
 }

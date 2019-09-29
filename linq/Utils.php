@@ -4,47 +4,105 @@
 namespace linq;
 
 
+use Closure;
+use InvalidArgumentException;
+
 class Utils
 {
-    /**
-     * @param $iterator
-     * @param \Closure $predicate
-     * @return \Generator
-     */
-    public static function where($iterator, $predicate)
+    public static function range(int $start, int $count, int $step = 1)
+    {
+        if ($count <= 0) {
+            throw new InvalidArgumentException('The $count must be greater than 0.');
+        }
+        $value = $start;
+        yield $value;
+        $count--;
+        while ($count > 0) {
+            yield $value += $step;
+            $count--;
+        }
+    }
+
+    public static function map($iterator, Closure $selector)
     {
         foreach ($iterator as $index => $item) {
-            if (!call_user_func($predicate, $item, $index)) {
-                continue;
+            yield $selector($item, $index);
+        }
+    }
+
+    public static function selectMany($iterator, Closure $selector)
+    {
+        foreach ($iterator as $index => $item) {
+            $collection = $selector($item, $index);
+            if ($collection) {
+                foreach ($collection as $subItem) {
+                    yield $subItem;
+                }
             }
-            yield $item;
         }
     }
 
-    /**
-     * @param $iterator
-     * @param \Closure $closure
-     * @return \Generator
-     */
-    public static function map($iterator, $closure)
+    public static function where($iterator, Closure $predicate)
     {
         foreach ($iterator as $index => $item) {
-            yield call_user_func($closure, $item, $index);
+            if ($predicate($item, $index)) {
+                yield $item;
+            }
         }
     }
 
-    public static function join($left, $right, $on, $result, $strategy)
+    public static function join($left, $right, Closure $condition, Closure $resultSelector, string $type = 'INNER')
     {
+        $rightOns = [];
         foreach ($left as $lk => $lv) {
-            $isFound = false;
+            $leftOn = false;
             foreach ($right as $rk => $rv) {
-                if ($isFound && $strategy == Constants::JOIN_UNIQUE) {
-                    break;
+                $on = $condition($lv, $rv, $lk, $rk);
+                if ($on) {
+                    $leftOn = true;
+                    $rightOns[$rk] = 1;
+                    yield $resultSelector($lv, $rv, $lk, $rk);
                 }
-                $isFound = call_user_func($on, $lv, $rv, $lk, $rk);
-                if ($isFound) {
-                    yield call_user_func($result, $lv, $rv, $lk, $rk);
+            }
+            if (($type === 'LEFT' || $type === 'FULL') && !$leftOn) {
+                yield $resultSelector($lv, null, $lk, null);
+            }
+        }
+        if ($type === 'RIGHT' || $type === 'FULL') {
+            foreach ($right as $rk => $rv) {
+                if (!isset($rightOns[$rk])) {
+                    yield $resultSelector(null, $rv, null, $rk);
                 }
+            }
+        }
+    }
+
+    public static function groupJoin($left, $right, $groupSelector, $resultSelector)
+    {
+        $groups = [];
+        $groupIndex = 0;
+        foreach ($left as $lv) {
+            foreach ($right as $rv) {
+                $group = $groupSelector($lv, $rv);
+                if (!isset($groups[$group])) {
+                    $groups[$group] = 1;
+                    yield $resultSelector($lv, $rv, $groupIndex);
+                    $groupIndex++;
+                }
+            }
+        }
+    }
+
+    public static function group($iterator, Closure $groupSelector, Closure $resultSelector)
+    {
+        $groups = [];
+        $groupIndex = 0;
+        foreach ($iterator as $item) {
+            $group = $groupSelector($item);
+            if (!isset($groups[$group])) {
+                $groups[$group] = 1;
+                yield $resultSelector($item, $groupIndex);
+                $groupIndex++;
             }
         }
     }
@@ -52,7 +110,7 @@ class Utils
     public static function page($iterator, $page, $pageSize)
     {
         if ($pageSize <= 0) {
-            throw new \InvalidArgumentException();
+            throw new InvalidArgumentException();
         }
         if ($page <= 0) {
             $page = 1;
@@ -84,7 +142,7 @@ class Utils
         }
     }
 
-    public static function distinct($iterator, \Closure $keySelector)
+    public static function distinct($iterator, Closure $keySelector)
     {
         $set = [];
         foreach ($iterator as $index => $item) {
@@ -103,7 +161,7 @@ class Utils
         yield from $array;
     }
 
-    public static function union($iterator, $other, \Closure $keySelector)
+    public static function union($iterator, $other, Closure $keySelector)
     {
         $set = [];
         foreach ($iterator as $index => $item) {
@@ -124,7 +182,7 @@ class Utils
         }
     }
 
-    public static function intersect($iterator, $other, \Closure $keySelector)
+    public static function intersect($iterator, $other, Closure $keySelector)
     {
         $set = [];
         foreach ($iterator as $index => $item) {
@@ -141,7 +199,7 @@ class Utils
         }
     }
 
-    public static function except($iterator, $other, \Closure $keySelector)
+    public static function except($iterator, $other, Closure $keySelector)
     {
         $set = [];
         foreach ($other as $index => $item) {
