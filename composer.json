@@ -10,12 +10,16 @@
     }
   ],
   "require": {
-    "php": ">=7.0"
+    "php": ">=7.0",
+    "ext-json": "*"
   },
   "minimum-stability": "stable",
   "autoload": {
     "psr-4": {
       "linq\\": "linq/"
     }
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^8.3"
   }
 }
