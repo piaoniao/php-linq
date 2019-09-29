@@ -107,39 +107,16 @@ class Utils
         }
     }
 
-    public static function page($iterator, $page, $pageSize)
+    public static function append($iterator, $item)
     {
-        if ($pageSize <= 0) {
-            throw new InvalidArgumentException();
-        }
-        if ($page <= 0) {
-            $page = 1;
-        }
-        $start = ($page - 1) * $pageSize;
-        $end = $page * $pageSize - 1;
-        $crr = 0;
-        foreach ($iterator as $item) {
-            if ($crr > $end) {
-                break;
-            }
-            if ($start <= $crr && $crr <= $end) {
-                yield $item;
-            }
-            $crr++;
-        }
+        yield from $iterator;
+        yield $item;
     }
 
-    public static function limit($iterator, $count)
+    public static function concat($iterator, $array)
     {
-        $c = 0;
-        foreach ($iterator as $item) {
-            $c++;
-            if ($c <= $count) {
-                yield $item;
-            } else {
-                break;
-            }
-        }
+        yield from $iterator;
+        yield from $array;
     }
 
     public static function distinct($iterator, Closure $keySelector)
@@ -155,10 +132,43 @@ class Utils
         }
     }
 
-    public static function concat($iterator, array $array)
+    public static function except($iterator, $other, Closure $keySelector)
     {
+        $set = [];
+        foreach ($other as $index => $item) {
+            $key = $keySelector($item, $index);
+            $set[$key] = true;
+        }
+        foreach ($iterator as $index => $item) {
+            $key = $keySelector($item, $index);
+            if (isset($set[$key])) {
+                continue;
+            }
+            yield $item;
+        }
+    }
+
+    public static function intersect($iterator, $other, Closure $keySelector)
+    {
+        $set = [];
+        foreach ($iterator as $index => $item) {
+            $key = $keySelector($item, $index);
+            $set[$key] = true;
+        }
+        foreach ($other as $index => $item) {
+            $key = $keySelector($item, $index);
+            if (!isset($set[$key])) {
+                continue;
+            }
+            unset($set[$key]);
+            yield $item;
+        }
+    }
+
+    public static function prepend($iterator, $item)
+    {
+        yield $item;
         yield from $iterator;
-        yield from $array;
     }
 
     public static function union($iterator, $other, Closure $keySelector)
@@ -182,48 +192,72 @@ class Utils
         }
     }
 
-    public static function intersect($iterator, $other, Closure $keySelector)
+    public static function page($iterator, $page, $pageSize)
     {
-        $set = [];
-        foreach ($iterator as $index => $item) {
-            $key = $keySelector($item, $index);
-            $set[$key] = true;
+        if ($pageSize <= 0) {
+            throw new InvalidArgumentException();
         }
-        foreach ($other as $index => $item) {
-            $key = $keySelector($item, $index);
-            if (!isset($set[$key])) {
+        if ($page <= 0) {
+            $page = 1;
+        }
+        $start = ($page - 1) * $pageSize;
+        $end = $page * $pageSize - 1;
+        $crr = 0;
+        foreach ($iterator as $item) {
+            if ($crr > $end) {
+                break;
+            }
+            if ($start <= $crr && $crr <= $end) {
+                yield $item;
+            }
+            $crr++;
+        }
+    }
+
+    public static function skip($iterator, $count)
+    {
+        foreach ($iterator as $item) {
+            if ($count > 0) {
+                $count--;
                 continue;
             }
-            unset($set[$key]);
             yield $item;
         }
     }
 
-    public static function except($iterator, $other, Closure $keySelector)
+    public static function skipWhile($iterator, Closure $predicate)
     {
-        $set = [];
-        foreach ($other as $index => $item) {
-            $key = $keySelector($item, $index);
-            $set[$key] = true;
-        }
+        $yielding = false;
         foreach ($iterator as $index => $item) {
-            $key = $keySelector($item, $index);
-            if (isset($set[$key])) {
-                continue;
+            if (!$yielding && $predicate($item, $index)) {
+                $yielding = true;
+            }
+            if ($yielding) {
+                yield $item;
+            }
+        }
+    }
+
+    public static function take($iterator, $count)
+    {
+        $c = 0;
+        foreach ($iterator as $item) {
+            $c++;
+            if ($c <= $count) {
+                yield $item;
+            } else {
+                break;
+            }
+        }
+    }
+
+    public static function takeWhile($iterator, $predicate)
+    {
+        foreach ($iterator as $index => $item) {
+            if (!$predicate($item, $index)) {
+                break;
             }
             yield $item;
         }
-    }
-
-    public static function prepend($iterator, $item)
-    {
-        yield $item;
-        yield from $iterator;
-    }
-
-    public static function append($iterator, $item)
-    {
-        yield from $iterator;
-        yield $item;
     }
 }

@@ -3,6 +3,7 @@
 namespace linq;
 
 
+use ArrayAccess;
 use ArrayIterator;
 use Closure;
 use Countable;
@@ -31,17 +32,6 @@ class Linq
         }
         if ($this->iterator === null) {
             throw new InvalidArgumentException();
-        }
-    }
-
-    /// Conversion
-
-    public function toArrayIterator()
-    {
-        if ($this->iterator instanceof ArrayIterator) {
-            return $this->iterator;
-        } else {
-            return new ArrayIterator($this->iterator);
         }
     }
 
@@ -82,7 +72,7 @@ class Linq
 
     public function join($array, Closure $condition, Closure $resultSelector, $type = 'INNER')
     {
-        if (!is_array($array) && !$array instanceof ArrayIterator) {
+        if (!is_array($array) && !$array instanceof ArrayAccess) {
             throw new InvalidArgumentException();
         }
         $this->iterator = Utils::join($this->iterator, $array, $condition, $resultSelector, $type);
@@ -101,7 +91,87 @@ class Linq
         return $this;
     }
 
+    /// Select
+
+    public function page($page, $pageSize)
+    {
+        $this->iterator = Utils::page($this->iterator, $page, $pageSize);
+        return $this;
+    }
+
+    public function select()
+    {
+        $data = [];
+        foreach ($this->iterator as $item) {
+            $data[] = $item;
+        }
+        return $data;
+    }
+
+    public function find()
+    {
+        return $this->take(1)->select();
+    }
+
     /// Aggregation
+
+    public function aggregate(Closure $closure, $seed = null)
+    {
+        $result = $seed;
+        foreach ($this->iterator as $index => $item) {
+            $result = $closure($result, $item, $index);
+        }
+        return $result;
+    }
+
+    public function count(Closure $predicate = null): int
+    {
+        if ($this->iterator instanceof Countable && $predicate === null) {
+            return count($this->iterator);
+        }
+
+        $count = 0;
+        foreach ($this->iterator as $k => $v) {
+            if ($predicate == null) {
+                $count++;
+            } else {
+                if ($predicate($v, $k)) {
+                    $count++;
+                }
+            }
+        }
+        return $count;
+    }
+
+    public function average(Closure $selector = null)
+    {
+        $sum = $count = 0;
+        foreach ($this->iterator as $index => $item) {
+            if ($selector == null) {
+                $sum += $item;
+            } else {
+                $sum += $selector($item, $index);
+            }
+            $count++;
+        }
+        if ($count === 0) {
+            throw new UnexpectedValueException();
+        }
+        return $sum / $count;
+    }
+
+    public function sum(Closure $selector = null)
+    {
+        $sum = 0;
+        foreach ($this as $index => $item) {
+            if ($selector == null) {
+                $sum += $item;
+            } else {
+                $sum += $selector($item, $index);
+            }
+        }
+        return $sum;
+    }
 
     public function min(Closure $selector = null)
     {
@@ -139,43 +209,7 @@ class Linq
         return $max;
     }
 
-    /// Output
-
-    public function select()
-    {
-        $data = [];
-        foreach ($this->iterator as $item) {
-            $data[] = $item;
-        }
-        return $data;
-    }
-
-    public function find()
-    {
-        return $this->limit(1)->select();
-    }
-
-    public function page($page, $pageSize)
-    {
-        $this->iterator = Utils::page($this->iterator, $page, $pageSize);
-        return $this;
-    }
-
-    public function limit($count)
-    {
-        $this->iterator = Utils::limit($this->iterator, $count);
-        return $this;
-    }
-
-    public function contains($value)
-    {
-        foreach ($this->iterator as $index => $item) {
-            if ($value === $item) {
-                return true;
-            }
-        }
-        return false;
-    }
+    /// Set
 
     public function all(Closure $predicate)
     {
@@ -197,6 +231,81 @@ class Linq
         return false;
     }
 
+    public function append($item)
+    {
+        $this->iterator = Utils::append($this->iterator, $item);
+        return $this;
+    }
+
+    public function concat($array)
+    {
+        if (!is_array($array) && !$array instanceof ArrayAccess) {
+            throw new InvalidArgumentException();
+        }
+        $this->iterator = Utils::concat($this->iterator, $array);
+        return $this;
+    }
+
+    public function contains($value)
+    {
+        foreach ($this->iterator as $index => $item) {
+            if ($value === $item) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function distinct(Closure $keySelector)
+    {
+        $this->iterator = Utils::distinct($this->iterator, $keySelector);
+        return $this;
+    }
+
+    public function except($other, Closure $keySelector)
+    {
+        $this->iterator = Utils::except($this->iterator, $other, $keySelector);
+        return $this;
+    }
+
+    public function intersect($other, Closure $keySelector)
+    {
+        $this->iterator = Utils::intersect($this->iterator, $other, $keySelector);
+        return $this;
+    }
+
+    public function prepend($item)
+    {
+        $this->iterator = Utils::prepend($this->iterator, $item);
+        return $this;
+    }
+
+    public function union($other, Closure $keySelector)
+    {
+        $this->iterator = Utils::union($this->iterator, $other, $keySelector);
+        return $this;
+    }
+
+    /// Pagination
+
+    public function elementAt($key, $default = null)
+    {
+        if ($this->iterator instanceof ArrayAccess) {
+            if ($this->iterator->offsetExists($key)) {
+                return $this->iterator->offsetGet($key);
+            } else {
+                return $default;
+            }
+        }
+
+        foreach ($this->iterator as $k => $v) {
+            if ($k === $key) {
+                return $v;
+            }
+        }
+        return $default;
+    }
+
     public function first($default = null)
     {
         foreach ($this->iterator as $item) {
@@ -214,107 +323,92 @@ class Linq
         return $value;
     }
 
-    public function union($other, Closure $keySelector)
+    public function single(Closure $predicate = null, $default = null)
     {
-        $this->iterator = Utils::union($this->iterator, $other, $keySelector);
-        return $this;
-    }
-
-    public function intersect($other, Closure $keySelector)
-    {
-        $this->iterator = Utils::intersect($this->iterator, $other, $keySelector);
-        return $this;
-    }
-
-    public function except($other, Closure $keySelector)
-    {
-        $this->iterator = Utils::except($this->iterator, $other, $keySelector);
-        return $this;
-    }
-
-    public function prepend($item)
-    {
-        $this->iterator = Utils::prepend($this->iterator, $item);
-        return $this;
-    }
-
-    public function append($item)
-    {
-        $this->iterator = Utils::append($this->iterator, $item);
-        return $this;
-    }
-
-    public function distinct(Closure $keySelector)
-    {
-        $this->iterator = Utils::distinct($this->iterator, $keySelector);
-        return $this;
-    }
-
-    public function concat($array)
-    {
-        if (!is_array($array) && !$array instanceof ArrayIterator) {
-            throw new InvalidArgumentException();
-        }
-        $this->iterator = Utils::concat($this->iterator, $array);
-        return $this;
-    }
-
-    public function sum(Closure $selector = null)
-    {
-        $sum = 0;
-        foreach ($this as $index => $item) {
-            if ($selector == null) {
-                $sum += $item;
-            } else {
-                $sum += $selector($item, $index);
-            }
-        }
-        return $sum;
-    }
-
-    public function average(Closure $selector = null)
-    {
-        $sum = $count = 0;
+        $found = false;
+        $value = null;
         foreach ($this->iterator as $index => $item) {
-            if ($selector == null) {
-                $sum += $item;
+            if ($predicate === null) {
+                $found = true;
+                $value = $item;
+                break;
             } else {
-                $sum += $selector($item, $index);
-            }
-            $count++;
-        }
-        if ($count === 0) {
-            throw new UnexpectedValueException();
-        }
-        return $sum / $count;
-    }
-
-    public function aggregate(Closure $closure, $seed = null)
-    {
-        $result = $seed;
-        foreach ($this->iterator as $index => $item) {
-            $result = $closure($result, $item, $index);
-        }
-        return $result;
-    }
-
-    public function count(Closure $predicate = null): int
-    {
-        if ($this->iterator instanceof Countable && $predicate === null) {
-            return count($this->iterator);
-        }
-
-        $count = 0;
-        foreach ($this->iterator as $k => $v) {
-            if ($predicate == null) {
-                $count++;
-            } else {
-                if ($predicate($v, $k)) {
-                    $count++;
+                if ($predicate($item, $index)) {
+                    $found = true;
+                    $value = $item;
+                    break;
                 }
             }
         }
-        return $count;
+        if (!$found) {
+            $value = $default;
+        }
+        return $value;
     }
 
+    public function indexOf($value)
+    {
+        foreach ($this->iterator as $index => $item) {
+            if ($item === $value) {
+                return $index;
+            }
+        }
+        return false;
+    }
+
+    public function lastIndexOf($value)
+    {
+        $key = false;
+        foreach ($this->iterator as $index => $item) {
+            if ($item === $value) {
+                $key = $index;
+            }
+        }
+        return $key;
+    }
+
+    public function findIndex($predicate)
+    {
+        foreach ($this->iterator as $index => $item) {
+            if ($predicate($item, $index)) {
+                return $index;
+            }
+        }
+        return false;
+    }
+
+    public function findLastIndex($predicate)
+    {
+        $key = false;
+        foreach ($this->iterator as $index => $item) {
+            if ($predicate($item, $index)) {
+                $key = $index;
+            }
+        }
+        return $key;
+    }
+
+    public function skip(int $count)
+    {
+        $this->iterator = Utils::skip($this->iterator, $count);
+        return $this;
+    }
+
+    public function skipWhile(Closure $predicate)
+    {
+        $this->iterator = Utils::skipWhile($this->iterator, $predicate);
+        return $this;
+    }
+
+    public function take($count)
+    {
+        $this->iterator = Utils::take($this->iterator, $count);
+        return $this;
+    }
+
+    public function takeWhile($predicate)
+    {
+        $this->iterator = Utils::takeWhile($this->iterator, $predicate);
+        return $this;
+    }
 }
