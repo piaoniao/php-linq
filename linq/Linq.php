@@ -8,7 +8,6 @@ use ArrayIterator;
 use Closure;
 use InvalidArgumentException;
 use Traversable;
-use UnexpectedValueException;
 
 
 /**
@@ -264,7 +263,7 @@ class Linq
      */
     public function all(Closure $predicate)
     {
-        return $this->all($predicate);
+        return Utils::all($this->iterator, $predicate);
     }
 
     /**
@@ -276,55 +275,82 @@ class Linq
         return Utils::any($this->iterator, $predicate);
     }
 
+    /**
+     * @param mixed $value
+     * @return bool
+     */
+    public function contains($value)
+    {
+        return Utils::contains($this->iterator, $value);
+    }
+
+    /**
+     * @param mixed $item
+     * @return $this
+     */
     public function append($item)
     {
         $this->iterator = Utils::append($this->iterator, $item);
         return $this;
     }
 
+    /**
+     * @param array|ArrayAccess $array
+     * @return $this
+     */
     public function concat($array)
     {
-        if (!is_array($array) && !$array instanceof ArrayAccess) {
-            throw new InvalidArgumentException();
-        }
         $this->iterator = Utils::concat($this->iterator, $array);
         return $this;
     }
 
-    public function contains($value)
-    {
-        foreach ($this->iterator as $index => $item) {
-            if ($value === $item) {
-                return true;
-            }
-        }
-        return false;
-    }
-
+    /**
+     * @param Closure|null $keySelector $keySelector($item, $index) : int|string
+     * @return $this
+     */
     public function distinct(Closure $keySelector = null)
     {
         $this->iterator = Utils::distinct($this->iterator, $keySelector);
         return $this;
     }
 
+    /**
+     * @param array|ArrayAccess $other
+     * @param Closure $keySelector $keySelector($item, $index) : int|string
+     * @return $this
+     */
     public function except($other, Closure $keySelector)
     {
         $this->iterator = Utils::except($this->iterator, $other, $keySelector);
         return $this;
     }
 
+    /**
+     * @param array|ArrayAccess $other
+     * @param Closure $keySelector $keySelector($item, $index) : int|string
+     * @return $this
+     */
     public function intersect($other, Closure $keySelector)
     {
         $this->iterator = Utils::intersect($this->iterator, $other, $keySelector);
         return $this;
     }
 
+    /**
+     * @param mixed $item
+     * @return $this
+     */
     public function prepend($item)
     {
         $this->iterator = Utils::prepend($this->iterator, $item);
         return $this;
     }
 
+    /**
+     * @param array|ArrayAccess $other
+     * @param Closure $keySelector $keySelector($item, $index) : int|string
+     * @return $this
+     */
     public function union($other, Closure $keySelector)
     {
         $this->iterator = Utils::union($this->iterator, $other, $keySelector);
@@ -333,125 +359,115 @@ class Linq
 
     /// Pagination
 
+    /**
+     * @param mixed $key
+     * @param mixed|null $default
+     * @return mixed|null
+     */
     public function elementAt($key, $default = null)
     {
-        if ($this->iterator instanceof ArrayAccess) {
-            if ($this->iterator->offsetExists($key)) {
-                return $this->iterator->offsetGet($key);
-            } else {
-                return $default;
-            }
-        }
-
-        foreach ($this->iterator as $k => $v) {
-            if ($k === $key) {
-                return $v;
-            }
-        }
-        return $default;
+        return Utils::elementAt($this->iterator, $key, $default);
     }
 
+    /**
+     * @param mixed|null $default
+     * @return mixed|null
+     */
     public function first($default = null)
     {
-        foreach ($this->iterator as $item) {
-            return $item;
-        }
-        return $default;
+        return Utils::first($this->iterator, $default);
     }
 
+    /**
+     * @param mixed|null $default
+     * @return mixed|null
+     */
     public function last($default = null)
     {
-        $value = $default;
-        foreach ($this->iterator as $item) {
-            $value = $item;
-        }
-        return $value;
+        return Utils::last($this->iterator, $default);
     }
 
+    /**
+     * @param Closure|null $predicate $predicate($item, $index) : bool
+     * @param mixed|null $default
+     * @return mixed|null
+     */
     public function single(Closure $predicate = null, $default = null)
     {
-        $found = false;
-        $value = null;
-        foreach ($this->iterator as $index => $item) {
-            if ($predicate === null) {
-                $found = true;
-                $value = $item;
-                break;
-            } else {
-                if ($predicate($item, $index)) {
-                    $found = true;
-                    $value = $item;
-                    break;
-                }
-            }
-        }
-        if (!$found) {
-            $value = $default;
-        }
-        return $value;
+        return Utils::single($this->iterator, $predicate, $default);
     }
 
+    /**
+     * @param mixed $value
+     * @return int|false
+     */
     public function indexOf($value)
     {
-        foreach ($this->iterator as $index => $item) {
-            if ($item === $value) {
-                return $index;
-            }
-        }
-        return false;
+        return Utils::indexOf($this->iterator, $value);
     }
 
+    /**
+     * @param mixed $value
+     * @return int|false
+     */
     public function lastIndexOf($value)
     {
-        $key = false;
-        foreach ($this->iterator as $index => $item) {
-            if ($item === $value) {
-                $key = $index;
-            }
-        }
-        return $key;
+        return Utils::lastIndexOf($this->iterator, $value);
     }
 
-    public function findIndex($predicate)
+    /**
+     * @param Closure $predicate $predicate($item, $index) : bool
+     * @return int|false
+     */
+    public function findIndex(Closure $predicate)
     {
-        foreach ($this->iterator as $index => $item) {
-            if ($predicate($item, $index)) {
-                return $index;
-            }
-        }
-        return false;
+        return Utils::findIndex($this->iterator, $predicate);
     }
 
-    public function findLastIndex($predicate)
+    /**
+     * @param Closure $predicate $predicate($item, $index) : bool
+     * @return int|false
+     */
+    public function findLastIndex(Closure $predicate)
     {
-        $key = false;
-        foreach ($this->iterator as $index => $item) {
-            if ($predicate($item, $index)) {
-                $key = $index;
-            }
-        }
-        return $key;
+        return Utils::findLastIndex($this->iterator, $predicate);
     }
 
+    /**
+     * @param int $count
+     * @return $this
+     */
     public function skip(int $count)
     {
         $this->iterator = Utils::skip($this->iterator, $count);
         return $this;
     }
 
+    /**
+     * @param Closure $predicate $predicate($item, $index) : bool
+     * @return $this
+     */
     public function skipWhile(Closure $predicate)
     {
         $this->iterator = Utils::skipWhile($this->iterator, $predicate);
         return $this;
     }
 
+    /**
+     * @param int $count
+     * @return $this
+     */
     public function take($count)
     {
         $this->iterator = Utils::take($this->iterator, $count);
         return $this;
     }
 
-    public function takeWhile($predicate)
+    /**
+     * @param Closure $predicate $predicate($item, $index) : bool
+     * @return $this
+     */
+    public function takeWhile(Closure $predicate)
     {
         $this->iterator = Utils::takeWhile($this->iterator, $predicate);
         return $this;

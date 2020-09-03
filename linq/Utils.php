@@ -256,6 +256,16 @@ class Utils
         return false;
     }
 
+    public static function contains($iterator, $value)
+    {
+        foreach ($iterator as $index => $item) {
+            if ($value === $item) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static function append($iterator, $item)
     {
         yield from $iterator;
@@ -352,6 +362,106 @@ class Utils
             $set[$key] = true;
             yield $item;
         }
+    }
+
+    public static function elementAt($iterator, $key, $default = null)
+    {
+        if ($iterator instanceof ArrayAccess) {
+            if ($iterator->offsetExists($key)) {
+                return $iterator->offsetGet($key);
+            } else {
+                return $default;
+            }
+        }
+
+        foreach ($iterator as $k => $v) {
+            if ($k === $key) {
+                return $v;
+            }
+        }
+        return $default;
+    }
+
+    public static function first($iterator, $default = null)
+    {
+        foreach ($iterator as $item) {
+            return $item;
+        }
+        return $default;
+    }
+
+    public static function last($iterator, $default = null)
+    {
+        $value = $default;
+        foreach ($iterator as $item) {
+            $value = $item;
+        }
+        return $value;
+    }
+
+    public static function single($iterator, Closure $predicate = null, $default = null)
+    {
+        $found = false;
+        $value = null;
+        foreach ($iterator as $index => $item) {
+            if ($predicate === null) {
+                $found = true;
+                $value = $item;
+                break;
+            } else {
+                if ($predicate($item, $index)) {
+                    $found = true;
+                    $value = $item;
+                    break;
+                }
+            }
+        }
+        if (!$found) {
+            $value = $default;
+        }
+        return $value;
+    }
+
+    public static function indexOf($iterator, $value)
+    {
+        foreach ($iterator as $index => $item) {
+            if ($item === $value) {
+                return $index;
+            }
+        }
+        return false;
+    }
+
+    public static function lastIndexOf($iterator, $value)
+    {
+        $key = false;
+        foreach ($iterator as $index => $item) {
+            if ($item === $value) {
+                $key = $index;
+            }
+        }
+        return $key;
+    }
+
+    public static function findIndex($iterator, $predicate)
+    {
+        foreach ($iterator as $index => $item) {
+            if ($predicate($item, $index)) {
+                return $index;
+            }
+        }
+        return false;
+    }
+
+    public static function findLastIndex($iterator, Closure $predicate)
+    {
+        $key = false;
+        foreach ($iterator as $index => $item) {
+            if ($predicate($item, $index)) {
+                $key = $index;
+            }
+        }
+        return $key;
     }
 
     public static function skip($iterator, $count)

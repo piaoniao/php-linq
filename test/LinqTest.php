@@ -547,6 +547,44 @@ class LinqTest extends TestCase
         });
 
         $this->assertEquals($test, true);
+
+        $numbers = [5, 4, 0, 3, 9, 8, 6, 7, 2, 10];
+
+        $test = Linq::from($numbers)->all(function ($it) {
+            return $it >= 1;
+        });
+
+        $this->assertEquals($test, false);
+    }
+
+    // any
+    public function testAny()
+    {
+        $numbers = [5, 4, 1, 3, 9, 8, 6, 7, 2, 10];
+
+        $test = Linq::from($numbers)->any(function ($it) {
+            return $it <= 10;
+        });
+
+        $this->assertEquals($test, true);
+
+        $numbers = [5, 4, 0, 3, 9, 8, 6, 7, 2, 10];
+
+        $test = Linq::from($numbers)->any(function ($it) {
+            return $it > 10;
+        });
+
+        $this->assertEquals($test, false);
+    }
+
+    // contains
+    public function testContains()
+    {
+        $numbers = [5, 4, 1, 3, 9, 8, 6, 7, 2, 10];
+
+        $test = Linq::from($numbers)->contains(5);
+
+        $this->assertEquals($test, true);
     }
 
     // first
