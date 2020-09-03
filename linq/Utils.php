@@ -4,6 +4,7 @@
 namespace linq;
 
 
+use ArrayAccess;
 use Closure;
 use InvalidArgumentException;
 
@@ -14,9 +15,9 @@ class Utils
         if ($count <= 0) {
             throw new InvalidArgumentException('The $count must be greater than 0.');
         }
-        $value = $start;
-        yield $value;
+        yield $start;
         $count--;
+        $value = $start;
         while ($count > 0) {
             yield $value += $step;
             $count--;
@@ -35,8 +36,12 @@ class Utils
         foreach ($iterator as $index => $item) {
             $collection = $selector($item, $index);
             if ($collection) {
-                foreach ($collection as $subItem) {
-                    yield $subItem;
+                if (is_array($collection) || $collection instanceof ArrayAccess) {
+                    foreach ($collection as $subItem) {
+                        yield $subItem;
+                    }
+                } else {
+                    throw new InvalidArgumentException('The return value of $selector must be an array object.');
                 }
             }
         }
@@ -51,13 +56,13 @@ class Utils
         }
     }
 
-    public static function join($left, $right, Closure $condition, Closure $resultSelector, string $type = 'INNER')
+    public static function join($left, $right, Closure $predicate, Closure $resultSelector, string $type = 'INNER')
     {
         $rightOns = [];
         foreach ($left as $lk => $lv) {
             $leftOn = false;
             foreach ($right as $rk => $rv) {
-                $on = $condition($lv, $rv, $lk, $rk);
+                $on = $predicate($lv, $rv, $lk, $rk);
                 if ($on) {
                     $leftOn = true;
                     $rightOns[$rk] = 1;
@@ -81,12 +86,15 @@ class Utils
     {
         $groups = [];
         $groupIndex = 0;
-        foreach ($left as $lv) {
-            foreach ($right as $rv) {
-                $group = $groupSelector($lv, $rv);
+        foreach ($left as $lk => $lv) {
+            foreach ($right as $rk => $rv) {
+                $group = $groupSelector($lv, $rv, $lk, $rk);
+                if (!is_string($group) && !is_int($group)) {
+                    throw new InvalidArgumentException('The return value of $groupSelector must be a string or integer.');
+                }
                 if (!isset($groups[$group])) {
                     $groups[$group] = 1;
-                    yield $resultSelector($lv, $rv, $groupIndex);
+                    yield $resultSelector($lv, $rv, $group, $groupIndex);
                     $groupIndex++;
                 }
             }
@@ -97,13 +105,38 @@ class Utils
     {
         $groups = [];
         $groupIndex = 0;
-        foreach ($iterator as $item) {
-            $group = $groupSelector($item);
+        foreach ($iterator as $index => $item) {
+            $group = $groupSelector($item, $index);
+            if (!is_string($group) && !is_int($group)) {
+                throw new InvalidArgumentException('The return value of $groupSelector must be a string or integer.');
+            }
             if (!isset($groups[$group])) {
                 $groups[$group] = 1;
-                yield $resultSelector($item, $groupIndex);
+                yield $resultSelector($item, $group, $groupIndex);
                 $groupIndex++;
             }
+        }
+    }
+
+    public static function page($iterator, $page, $pageSize)
+    {
+        if ($pageSize <= 0) {
+            throw new InvalidArgumentException();
+        }
+        if ($page <= 0) {
+            $page = 1;
+        }
+        $start = ($page - 1) * $pageSize;
+        $end = $page * $pageSize - 1;
+        $crr = 0;
+        foreach ($iterator as $item) {
+            if ($crr > $end) {
+                break;
+            }
+            if ($start <= $crr && $crr <= $end) {
+                yield $item;
+            }
+            $crr++;
         }
     }
 
@@ -119,15 +152,28 @@ class Utils
         yield from $array;
     }
 
-    public static function distinct($iterator, Closure $keySelector)
+    public static function distinct($iterator, Closure $keySelector = null)
     {
         $set = [];
         foreach ($iterator as $index => $item) {
-            $key = $keySelector($index, $item);
-            if (isset($set[$key])) {
-                continue;
+            if ($keySelector === null) {
+                if (!is_string($item) && !is_int($item)) {
+                    throw new InvalidArgumentException('The $item must be a string or integer value when the $keySelector is null.');
+                }
+                if (isset($set[$item])) {
+                    continue;
+                }
+                $set[$item] = true;
+            } else {
+                $key = $keySelector($item, $index);
+                if (!is_string($key) && !is_int($key)) {
+                    throw new InvalidArgumentException('The return value of $keySelector must be a string or integer.');
+                }
+                if (isset($set[$key])) {
+                    continue;
+                }
+                $set[$key] = true;
             }
-            $set[$key] = true;
             yield $item;
         }
     }
@@ -189,28 +235,6 @@ class Utils
             }
             $set[$key] = true;
             yield $item;
-        }
-    }
-
-    public static function page($iterator, $page, $pageSize)
-    {
-        if ($pageSize <= 0) {
-            throw new InvalidArgumentException();
-        }
-        if ($page <= 0) {
-            $page = 1;
-        }
-        $start = ($page - 1) * $pageSize;
-        $end = $page * $pageSize - 1;
-        $crr = 0;
-        foreach ($iterator as $item) {
-            if ($crr > $end) {
-                break;
-            }
-            if ($start <= $crr && $crr <= $end) {
-                yield $item;
-            }
-            $crr++;
         }
     }
 

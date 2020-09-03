@@ -37,11 +37,21 @@ class Linq
 
     /// Generation
 
+    /**
+     * @param array|Traversable $source
+     * @return Linq
+     */
     public static function from($source)
     {
         return new Linq($source);
     }
 
+    /**
+     * @param int $start
+     * @param int $count
+     * @param int $step
+     * @return Linq
+     */
     public static function range(int $start, int $count, int $step)
     {
         $generator = Utils::range($start, $count, $step);
@@ -50,18 +60,30 @@ class Linq
 
     /// Projection and filtering
 
+    /**
+     * @param Closure $selector $selector($item, $index) : mixed
+     * @return $this
+     */
     public function map(Closure $selector)
     {
         $this->iterator = Utils::map($this->iterator, $selector);
         return $this;
     }
 
+    /**
+     * @param Closure $selector $selector($item, $index) : array
+     * @return $this
+     */
     public function selectMany(Closure $selector)
     {
         $this->iterator = Utils::selectMany($this->iterator, $selector);
         return $this;
     }
 
+    /**
+     * @param Closure $predicate $predicate($item, $index) : bool
+     * @return $this
+     */
     public function where(Closure $predicate)
     {
         $this->iterator = Utils::where($this->iterator, $predicate);
@@ -70,21 +92,72 @@ class Linq
 
     /// Joining and grouping
 
-    public function join($array, Closure $condition, Closure $resultSelector, $type = 'INNER')
+    /**
+     * @param array|arrayAccess $array
+     * @param Closure $predicate $predicate($left, $right, $leftIndex, $rightIndex) : bool
+     * @param Closure $resultSelector $resultSelector($left, $right, $leftIndex, $rightIndex) : mixed
+     * @param string $type 'INNER' or 'LEFT' or 'RIGHT' or 'FULL'
+     * @return $this
+     */
+    public function join($array, Closure $predicate, Closure $resultSelector, $type = 'INNER')
     {
-        if (!is_array($array) && !$array instanceof ArrayAccess) {
-            throw new InvalidArgumentException();
-        }
-        $this->iterator = Utils::join($this->iterator, $array, $condition, $resultSelector, $type);
+        $this->iterator = Utils::join($this->iterator, $array, $predicate, $resultSelector, $type);
         return $this;
     }
 
+    /**
+     * @param array|arrayAccess $array
+     * @param Closure $predicate $predicate($left, $right, $leftIndex, $rightIndex) : bool
+     * @param Closure $resultSelector $resultSelector($left, $right, $leftIndex, $rightIndex) : mixed
+     * @return $this
+     */
+    public function leftJoin($array, Closure $predicate, Closure $resultSelector)
+    {
+        $this->iterator = Utils::join($this->iterator, $array, $predicate, $resultSelector, 'LEFT');
+        return $this;
+    }
+
+    /**
+     * @param array|arrayAccess $array
+     * @param Closure $predicate $predicate($left, $right, $leftIndex, $rightIndex) : bool
+     * @param Closure $resultSelector $resultSelector($left, $right, $leftIndex, $rightIndex) : mixed
+     * @return $this
+     */
+    public function rightJoin($array, Closure $predicate, Closure $resultSelector)
+    {
+        $this->iterator = Utils::join($this->iterator, $array, $predicate, $resultSelector, 'RIGHT');
+        return $this;
+    }
+
+    /**
+     * @param array|arrayAccess $array
+     * @param Closure $predicate $predicate($left, $right, $leftIndex, $rightIndex) : bool
+     * @param Closure $resultSelector $resultSelector($left, $right, $leftIndex, $rightIndex) : mixed
+     * @return $this
+     */
+    public function fullJoin($array, Closure $predicate, Closure $resultSelector)
+    {
+        $this->iterator = Utils::join($this->iterator, $array, $predicate, $resultSelector, 'FULL');
+        return $this;
+    }
+
+    /**
+     * @param array|arrayAccess $array
+     * @param Closure $groupSelector $groupSelector($left, $right, $leftIndex, $rightIndex) : string|int
+     * @param Closure $resultSelector $resultSelector($left, $right, $group, $groupIndex) : mixed
+     * @return $this
+     */
     public function groupJoin($array, Closure $groupSelector, Closure $resultSelector)
     {
         $this->iterator = Utils::groupJoin($this->iterator, $array, $groupSelector, $resultSelector);
         return $this;
     }
 
+    /**
+     * @param Closure $groupSelector $groupSelector($item, $index) : string|int
+     * @param Closure $resultSelector $resultSelector($item, $group, $groupIndex) : mixed
+     * @return $this
+     */
     public function group(Closure $groupSelector, Closure $resultSelector)
     {
         $this->iterator = Utils::group($this->iterator, $groupSelector, $resultSelector);
@@ -93,12 +166,20 @@ class Linq
 
     /// Select
 
+    /**
+     * @param int $page
+     * @param int $pageSize
+     * @return $this
+     */
     public function page($page, $pageSize)
     {
         $this->iterator = Utils::page($this->iterator, $page, $pageSize);
         return $this;
     }
 
+    /**
+     * @return array
+     */
     public function select()
     {
         $data = [];
@@ -108,9 +189,15 @@ class Linq
         return $data;
     }
 
+    /**
+     * @return mixed|null
+     */
     public function find()
     {
-        return $this->take(1)->select();
+        foreach ($this->iterator as $item) {
+            return $item;
+        }
+        return null;
     }
 
     /// Aggregation
@@ -256,7 +343,7 @@ class Linq
         return false;
     }
 
-    public function distinct(Closure $keySelector)
+    public function distinct(Closure $keySelector = null)
     {
         $this->iterator = Utils::distinct($this->iterator, $keySelector);
         return $this;
