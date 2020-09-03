@@ -6,7 +6,6 @@ namespace linq;
 use ArrayAccess;
 use ArrayIterator;
 use Closure;
-use Countable;
 use InvalidArgumentException;
 use Traversable;
 use UnexpectedValueException;
@@ -202,120 +201,79 @@ class Linq
 
     /// Aggregation
 
-    public function aggregate(Closure $closure, $seed = null)
+    /**
+     * @param Closure $selector $selector($result, $item, $index) : mixed
+     * @param mixed $seed
+     * @return mixed|null
+     */
+    public function aggregate(Closure $selector, $seed = null)
     {
-        $result = $seed;
-        foreach ($this->iterator as $index => $item) {
-            $result = $closure($result, $item, $index);
-        }
-        return $result;
+        return Utils::aggregate($this->iterator, $selector, $seed);
     }
 
+    /**
+     * @param Closure|null $predicate $predicate($item, $index) : bool
+     * @return int
+     */
     public function count(Closure $predicate = null): int
     {
-        if ($this->iterator instanceof Countable && $predicate === null) {
-            return count($this->iterator);
-        }
-
-        $count = 0;
-        foreach ($this->iterator as $k => $v) {
-            if ($predicate == null) {
-                $count++;
-            } else {
-                if ($predicate($v, $k)) {
-                    $count++;
-                }
-            }
-        }
-        return $count;
+        return Utils::count($this->iterator, $predicate);
     }
 
+    /**
+     * @param Closure|null $selector $selector($item, $index) : mixed
+     * @return float|int
+     */
     public function average(Closure $selector = null)
     {
-        $sum = $count = 0;
-        foreach ($this->iterator as $index => $item) {
-            if ($selector == null) {
-                $sum += $item;
-            } else {
-                $sum += $selector($item, $index);
-            }
-            $count++;
-        }
-        if ($count === 0) {
-            throw new UnexpectedValueException();
-        }
-        return $sum / $count;
+        return Utils::average($this->iterator, $selector);
     }
 
+    /**
+     * @param Closure|null $selector $selector($item, $index) : int
+     * @return int|mixed
+     */
     public function sum(Closure $selector = null)
     {
-        $sum = 0;
-        foreach ($this as $index => $item) {
-            if ($selector == null) {
-                $sum += $item;
-            } else {
-                $sum += $selector($item, $index);
-            }
-        }
-        return $sum;
+        return Utils::sum($this->iterator, $selector);
     }
 
+    /**
+     * @param Closure|null $selector $selector($item, $index) : int
+     * @return int|mixed
+     */
     public function min(Closure $selector = null)
     {
-        $min = PHP_INT_MAX;
-        $found = false;
-        foreach ($this as $index => $item) {
-            if ($selector === null) {
-                $min = min($min, $item);
-            } else {
-                $min = min($min, $selector($item, $index));
-            }
-            $found = true;
-        }
-        if (!$found) {
-            throw new UnexpectedValueException();
-        }
-        return $min;
+        return Utils::min($this->iterator, $selector);
     }
 
+    /**
+     * @param Closure|null $selector $selector($item, $index) : int
+     * @return int|mixed
+     */
     public function max(Closure $selector = null)
     {
-        $max = PHP_INT_MIN;
-        $found = false;
-        foreach ($this as $index => $item) {
-            if ($selector == null) {
-                $max = max($max, $item);
-            } else {
-                $max = max($max, $selector($item, $index));
-            }
-            $found = true;
-        }
-        if (!$found) {
-            throw new UnexpectedValueException();
-        }
-        return $max;
+        return Utils::max($this->iterator, $selector);
     }
 
     /// Set
 
+    /**
+     * @param Closure $predicate $predicate($item, $index) : bool
+     * @return bool
+     */
     public function all(Closure $predicate)
     {
-        foreach ($this->iterator as $index => $item) {
-            if (!$predicate($item, $index)) {
-                return false;
-            }
-        }
-        return true;
+        return $this->all($predicate);
     }
 
+    /**
+     * @param Closure $predicate $predicate($item, $index) : bool
+     * @return bool
+     */
     public function any(Closure $predicate)
     {
-        foreach ($this->iterator as $index => $item) {
-            if ($predicate($item, $index)) {
-                return true;
-            }
-        }
-        return false;
+        return Utils::any($this->iterator, $predicate);
     }
 
     public function append($item)

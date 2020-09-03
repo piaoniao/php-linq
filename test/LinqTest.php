@@ -473,6 +473,70 @@ class LinqTest extends TestCase
         $this->assertEquals(json_encode($result), json_encode($test));
     }
 
+    // aggregate
+    public function testAggregate()
+    {
+        $test = Linq::from([1, 2, 3, 4, 5])
+            ->aggregate(function ($result, $item, $index) {
+                return $result + $item;
+            }, 0);
+
+        $result = 15;
+
+        $this->assertEquals($result, $test);
+    }
+
+    // count
+    public function testCount()
+    {
+        $test = Linq::from([1, 2, 3, 4, 5])
+            ->count(function ($item, $index) {
+                return $item % 2 == 1;
+            });
+
+        $result = 3;
+
+        $this->assertEquals($result, $test);
+    }
+
+    // average
+    public function testAverage()
+    {
+        $test = Linq::from([1, 2, 3, 4, 5])->average();
+
+        $result = 3;
+
+        $this->assertEquals($result, $test);
+    }
+
+    // sum
+    public function testSum()
+    {
+        $test = Linq::from([1, 2, 3, 4, 5])->sum();
+
+        $result = 15;
+
+        $this->assertEquals($result, $test);
+    }
+
+    public function testMin()
+    {
+        $test = Linq::from([6, 2, 3, 4, 5])->min();
+
+        $result = 2;
+
+        $this->assertEquals($result, $test);
+    }
+
+    public function testMax()
+    {
+        $test = Linq::from([1, 2, 7, 4, 5])->max();
+
+        $result = 7;
+
+        $this->assertEquals($result, $test);
+    }
+
     // all
     public function testAll()
     {

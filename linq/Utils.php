@@ -6,7 +6,9 @@ namespace linq;
 
 use ArrayAccess;
 use Closure;
+use Countable;
 use InvalidArgumentException;
+use UnexpectedValueException;
 
 class Utils
 {
@@ -138,6 +140,120 @@ class Utils
             }
             $crr++;
         }
+    }
+
+    public static function aggregate($iterator, Closure $closure, $seed = null)
+    {
+        $result = $seed;
+        foreach ($iterator as $index => $item) {
+            $result = $closure($result, $item, $index);
+        }
+        return $result;
+    }
+
+    public static function count($iterator, Closure $predicate = null): int
+    {
+        if ($iterator instanceof Countable && $predicate === null) {
+            return count($iterator);
+        }
+
+        $count = 0;
+        foreach ($iterator as $index => $item) {
+            if ($predicate == null) {
+                $count++;
+            } else {
+                if ($predicate($item, $index)) {
+                    $count++;
+                }
+            }
+        }
+        return $count;
+    }
+
+    public static function average($iterator, Closure $selector = null)
+    {
+        $sum = $count = 0;
+        foreach ($iterator as $index => $item) {
+            if ($selector == null) {
+                $sum += $item;
+            } else {
+                $sum += $selector($item, $index);
+            }
+            $count++;
+        }
+        if ($count === 0) {
+            throw new UnexpectedValueException();
+        }
+        return $sum / $count;
+    }
+
+    public static function sum($iterator, Closure $selector = null)
+    {
+        $sum = 0;
+        foreach ($iterator as $index => $item) {
+            if ($selector == null) {
+                $sum += $item;
+            } else {
+                $sum += $selector($item, $index);
+            }
+        }
+        return $sum;
+    }
+
+    public static function min($iterator, Closure $selector = null)
+    {
+        $min = PHP_INT_MAX;
+        $found = false;
+        foreach ($iterator as $index => $item) {
+            if ($selector === null) {
+                $min = min($min, $item);
+            } else {
+                $min = min($min, $selector($item, $index));
+            }
+            $found = true;
+        }
+        if (!$found) {
+            throw new UnexpectedValueException();
+        }
+        return $min;
+    }
+
+    public static function max($iterator, Closure $selector = null)
+    {
+        $max = PHP_INT_MIN;
+        $found = false;
+        foreach ($iterator as $index => $item) {
+            if ($selector == null) {
+                $max = max($max, $item);
+            } else {
+                $max = max($max, $selector($item, $index));
+            }
+            $found = true;
+        }
+        if (!$found) {
+            throw new UnexpectedValueException();
+        }
+        return $max;
+    }
+
+    public static function all($iterator, Closure $predicate)
+    {
+        foreach ($iterator as $index => $item) {
+            if (!$predicate($item, $index)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static function any($iterator, Closure $predicate)
+    {
+        foreach ($iterator as $index => $item) {
+            if ($predicate($item, $index)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static function append($iterator, $item)
