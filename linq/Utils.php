@@ -272,6 +272,12 @@ class Utils
         yield $item;
     }
 
+    public static function prepend($iterator, $item)
+    {
+        yield $item;
+        yield from $iterator;
+    }
+
     public static function concat($iterator, $array)
     {
         yield from $iterator;
@@ -335,12 +341,6 @@ class Utils
             unset($set[$key]);
             yield $item;
         }
-    }
-
-    public static function prepend($iterator, $item)
-    {
-        yield $item;
-        yield from $iterator;
     }
 
     public static function union($iterator, $other, Closure $keySelector)

@@ -295,6 +295,16 @@ class Linq
     }
 
     /**
+     * @param mixed $item
+     * @return $this
+     */
+    public function prepend($item)
+    {
+        $this->iterator = Utils::prepend($this->iterator, $item);
+        return $this;
+    }
+
+    /**
      * @param array|ArrayAccess $array
      * @return $this
      */
@@ -333,16 +343,6 @@ class Linq
     public function intersect($other, Closure $keySelector)
     {
         $this->iterator = Utils::intersect($this->iterator, $other, $keySelector);
-        return $this;
-    }
-
-    /**
-     * @param mixed $item
-     * @return $this
-     */
-    public function prepend($item)
-    {
-        $this->iterator = Utils::prepend($this->iterator, $item);
         return $this;
     }
 

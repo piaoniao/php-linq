@@ -587,6 +587,129 @@ class LinqTest extends TestCase
         $this->assertEquals($test, true);
     }
 
+    // append
+    public function testAppend()
+    {
+        $numbers = [2, 3, 4];
+
+        $test = Linq::from($numbers)->append(5)->select();
+
+        $result = [2, 3, 4, 5];
+
+        $this->assertEquals(json_encode($result), json_encode($test));
+    }
+
+    // prepend
+    public function testPrepend()
+    {
+        $numbers = [2, 3, 4];
+
+        $test = Linq::from($numbers)->prepend(1)->select();
+
+        $result = [1, 2, 3, 4];
+
+        $this->assertEquals(json_encode($result), json_encode($test));
+    }
+
+    // concat
+    public function testConcat()
+    {
+        $numbersA = [2, 3, 4];
+        $numbersB = [5, 6];
+
+        $test = Linq::from($numbersA)->concat($numbersB)->select();
+
+        $result = [2, 3, 4, 5, 6];
+
+        $this->assertEquals(json_encode($result), json_encode($test));
+    }
+
+    // distinct - Simple 1
+    public function testDistinct1()
+    {
+        $numbers = [2, 3, 4, 4, 2];
+
+        $test = Linq::from($numbers)->distinct()->select();
+
+        $result = [2, 3, 4];
+
+        $this->assertEquals(json_encode($result), json_encode($test));
+    }
+
+    // distinct - Simple 2
+    public function testDistinct2()
+    {
+        $users = [
+            ['name' => 'a', 'gender' => 0],
+            ['name' => 'b', 'gender' => 1],
+            ['name' => 'c', 'gender' => 0],
+        ];
+
+        $test = Linq::from($users)
+            ->distinct(function ($item, $index) {
+                return $item['gender'];
+            })
+            ->select();
+
+        $result = [
+            ['name' => 'a', 'gender' => 0],
+            ['name' => 'b', 'gender' => 1],
+        ];
+
+        $this->assertEquals(json_encode($result), json_encode($test));
+    }
+
+    // except
+    public function testExcept()
+    {
+        $numbersA = [2, 3, 4];
+        $numbersB = [3, 6];
+
+        $test = Linq::from($numbersA)
+            ->except($numbersB, function ($item, $index) {
+                return $item;
+            })
+            ->select();
+
+        $result = [2, 4];
+
+        $this->assertEquals(json_encode($result), json_encode($test));
+    }
+
+    // intersect
+    public function testIntersect()
+    {
+        $numbersA = [2, 3, 4];
+        $numbersB = [3, 6];
+
+        $test = Linq::from($numbersA)
+            ->intersect($numbersB, function ($item, $index) {
+                return $item;
+            })
+            ->select();
+
+        $result = [3];
+
+        $this->assertEquals(json_encode($result), json_encode($test));
+    }
+
+    // union
+    public function testUnion()
+    {
+        $numbersA = [2, 3, 4];
+        $numbersB = [3, 6];
+
+        $test = Linq::from($numbersA)
+            ->union($numbersB, function ($item, $index) {
+                return $item;
+            })
+            ->select();
+
+        $result = [2, 3, 4, 6];
+
+        $this->assertEquals(json_encode($result), json_encode($test));
+    }
+
     // first
     public function testFirst()
     {
