@@ -38,6 +38,8 @@
     * contains
     * append
     * prepend
+    * insert
+    * insertAll
     * concat
     * distinct
     * except
