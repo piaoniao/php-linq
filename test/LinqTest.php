@@ -611,6 +611,30 @@ class LinqTest extends TestCase
         $this->assertEquals(json_encode($result), json_encode($test));
     }
 
+    // insert
+    public function testInsert()
+    {
+        $numbers = [1, 3, 4];
+
+        $test = Linq::from($numbers)->insert(1, 2)->select();
+
+        $result = [1, 2, 3, 4];
+
+        $this->assertEquals(json_encode($result), json_encode($test));
+    }
+
+    // insertAll
+    public function testInsertAll()
+    {
+        $numbers = [1, 3, 4];
+
+        $test = Linq::from($numbers)->insertAll(2, [7, 8, 9])->select();
+
+        $result = [1, 3, 7, 8, 9, 4];
+
+        $this->assertEquals(json_encode($result), json_encode($test));
+    }
+
     // concat
     public function testConcat()
     {

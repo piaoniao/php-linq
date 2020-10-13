@@ -278,6 +278,42 @@ class Utils
         yield from $iterator;
     }
 
+    public static function insert($iterator, $insertIndex, $newItem)
+    {
+        if ($insertIndex < 0) {
+            $insertIndex = 0;
+        }
+        $fire = false;
+        foreach ($iterator as $index => $item) {
+            if ($insertIndex == $index) {
+                $fire = true;
+                yield $newItem;
+            }
+            yield $item;
+        }
+        if (!$fire) {
+            yield $newItem;
+        }
+    }
+
+    public static function insertAll($iterator, $insertIndex, $array)
+    {
+        if ($insertIndex < 0) {
+            $insertIndex = 0;
+        }
+        $fire = false;
+        foreach ($iterator as $index => $item) {
+            if ($insertIndex == $index) {
+                $fire = true;
+                yield from $array;
+            }
+            yield $item;
+        }
+        if (!$fire) {
+            yield from $array;
+        }
+    }
+
     public static function concat($iterator, $array)
     {
         yield from $iterator;

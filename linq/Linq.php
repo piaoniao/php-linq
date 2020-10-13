@@ -305,6 +305,28 @@ class Linq
     }
 
     /**
+     * @param int $index
+     * @param mixed $item
+     * @return $this
+     */
+    public function insert($index, $item)
+    {
+        $this->iterator = Utils::insert($this->iterator, $index, $item);
+        return $this;
+    }
+
+    /**
+     * @param int $index
+     * @param array|ArrayAccess $array
+     * @return $this
+     */
+    public function insertAll($index, $array)
+    {
+        $this->iterator = Utils::insertAll($this->iterator, $index, $array);
+        return $this;
+    }
+
+    /**
      * @param array|ArrayAccess $array
      * @return $this
      */
