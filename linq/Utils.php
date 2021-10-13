@@ -296,6 +296,24 @@ class Utils
         }
     }
 
+    public static function insertWhile($iterator, $newItem, Closure $predicate)
+    {
+        if ($predicate === null) {
+            return self::prepend($iterator, $newItem);
+        }
+        $fire = false;
+        foreach ($iterator as $index => $item) {
+            if (!$fire && $predicate($item, $index)) {
+                $fire = true;
+                yield $newItem;
+            }
+            yield $item;
+        }
+        if (!$fire) {
+            yield $newItem;
+        }
+    }
+
     public static function insertAll($iterator, $insertIndex, $array)
     {
         if ($insertIndex < 0) {

@@ -92,9 +92,9 @@ class Linq
 
     /**
      * @param array|arrayAccess $array
-     * @param Closure $predicate $predicate($left, $right, $leftIndex, $rightIndex) : bool
-     * @param Closure $resultSelector $resultSelector($left, $right, $leftIndex, $rightIndex) : mixed
-     * @param string $type 'INNER' or 'LEFT' or 'RIGHT' or 'FULL'
+     * @param Closure           $predicate      $predicate($left, $right, $leftIndex, $rightIndex) : bool
+     * @param Closure           $resultSelector $resultSelector($left, $right, $leftIndex, $rightIndex) : mixed
+     * @param string            $type           'INNER' or 'LEFT' or 'RIGHT' or 'FULL'
      * @return $this
      */
     public function join($array, Closure $predicate, Closure $resultSelector, $type = 'INNER')
@@ -105,8 +105,8 @@ class Linq
 
     /**
      * @param array|arrayAccess $array
-     * @param Closure $predicate $predicate($left, $right, $leftIndex, $rightIndex) : bool
-     * @param Closure $resultSelector $resultSelector($left, $right, $leftIndex, $rightIndex) : mixed
+     * @param Closure           $predicate      $predicate($left, $right, $leftIndex, $rightIndex) : bool
+     * @param Closure           $resultSelector $resultSelector($left, $right, $leftIndex, $rightIndex) : mixed
      * @return $this
      */
     public function leftJoin($array, Closure $predicate, Closure $resultSelector)
@@ -117,8 +117,8 @@ class Linq
 
     /**
      * @param array|arrayAccess $array
-     * @param Closure $predicate $predicate($left, $right, $leftIndex, $rightIndex) : bool
-     * @param Closure $resultSelector $resultSelector($left, $right, $leftIndex, $rightIndex) : mixed
+     * @param Closure           $predicate      $predicate($left, $right, $leftIndex, $rightIndex) : bool
+     * @param Closure           $resultSelector $resultSelector($left, $right, $leftIndex, $rightIndex) : mixed
      * @return $this
      */
     public function rightJoin($array, Closure $predicate, Closure $resultSelector)
@@ -129,8 +129,8 @@ class Linq
 
     /**
      * @param array|arrayAccess $array
-     * @param Closure $predicate $predicate($left, $right, $leftIndex, $rightIndex) : bool
-     * @param Closure $resultSelector $resultSelector($left, $right, $leftIndex, $rightIndex) : mixed
+     * @param Closure           $predicate      $predicate($left, $right, $leftIndex, $rightIndex) : bool
+     * @param Closure           $resultSelector $resultSelector($left, $right, $leftIndex, $rightIndex) : mixed
      * @return $this
      */
     public function fullJoin($array, Closure $predicate, Closure $resultSelector)
@@ -141,8 +141,8 @@ class Linq
 
     /**
      * @param array|arrayAccess $array
-     * @param Closure $groupSelector $groupSelector($left, $right, $leftIndex, $rightIndex) : string|int
-     * @param Closure $resultSelector $resultSelector($left, $right, $group, $groupIndex) : mixed
+     * @param Closure           $groupSelector  $groupSelector($left, $right, $leftIndex, $rightIndex) : string|int
+     * @param Closure           $resultSelector $resultSelector($left, $right, $group, $groupIndex) : mixed
      * @return $this
      */
     public function groupJoin($array, Closure $groupSelector, Closure $resultSelector)
@@ -152,7 +152,7 @@ class Linq
     }
 
     /**
-     * @param Closure $groupSelector $groupSelector($item, $index) : string|int
+     * @param Closure $groupSelector  $groupSelector($item, $index) : string|int
      * @param Closure $resultSelector $resultSelector($item, $group, $groupIndex) : mixed
      * @return $this
      */
@@ -202,7 +202,7 @@ class Linq
 
     /**
      * @param Closure $selector $selector($result, $item, $index) : mixed
-     * @param mixed $seed
+     * @param mixed   $seed
      * @return mixed|null
      */
     public function aggregate(Closure $selector, $seed = null)
@@ -305,7 +305,7 @@ class Linq
     }
 
     /**
-     * @param int $index
+     * @param int   $index
      * @param mixed $item
      * @return $this
      */
@@ -316,7 +316,18 @@ class Linq
     }
 
     /**
-     * @param int $index
+     * @param mixed   $item
+     * @param Closure $predicate $predicate($item, $index) : bool
+     * @return $this
+     */
+    public function insertWhile($item, Closure $predicate)
+    {
+        $this->iterator = Utils::insertWhile($this->iterator, $item, $predicate);
+        return $this;
+    }
+
+    /**
+     * @param int               $index
      * @param array|ArrayAccess $array
      * @return $this
      */
@@ -348,7 +359,7 @@ class Linq
 
     /**
      * @param array|ArrayAccess $other
-     * @param Closure $keySelector $keySelector($item, $index) : int|string
+     * @param Closure           $keySelector $keySelector($item, $index) : int|string
      * @return $this
      */
     public function except($other, Closure $keySelector)
@@ -359,7 +370,7 @@ class Linq
 
     /**
      * @param array|ArrayAccess $other
-     * @param Closure $keySelector $keySelector($item, $index) : int|string
+     * @param Closure           $keySelector $keySelector($item, $index) : int|string
      * @return $this
      */
     public function intersect($other, Closure $keySelector)
@@ -370,7 +381,7 @@ class Linq
 
     /**
      * @param array|ArrayAccess $other
-     * @param Closure $keySelector $keySelector($item, $index) : int|string
+     * @param Closure           $keySelector $keySelector($item, $index) : int|string
      * @return $this
      */
     public function union($other, Closure $keySelector)
@@ -382,7 +393,7 @@ class Linq
     /// Pagination
 
     /**
-     * @param mixed $key
+     * @param mixed      $key
      * @param mixed|null $default
      * @return mixed|null
      */
@@ -411,7 +422,7 @@ class Linq
 
     /**
      * @param Closure|null $predicate $predicate($item, $index) : bool
-     * @param mixed|null $default
+     * @param mixed|null   $default
      * @return mixed|null
      */
     public function single(Closure $predicate = null, $default = null)
