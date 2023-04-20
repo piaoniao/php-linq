@@ -278,28 +278,10 @@ class Utils
         yield from $iterator;
     }
 
-    public static function insert($iterator, $insertIndex, $newItem)
+    public static function insert($iterator, $predicate, $newItem)
     {
-        if ($insertIndex < 0) {
-            $insertIndex = 0;
-        }
-        $fire = false;
-        foreach ($iterator as $index => $item) {
-            if ($insertIndex == $index) {
-                $fire = true;
-                yield $newItem;
-            }
-            yield $item;
-        }
-        if (!$fire) {
-            yield $newItem;
-        }
-    }
-
-    public static function insertWhile($iterator, $newItem, Closure $predicate)
-    {
-        if ($predicate === null) {
-            return self::prepend($iterator, $newItem);
+        if (!$predicate) {
+            return self::append($iterator, $newItem);
         }
         $fire = false;
         foreach ($iterator as $index => $item) {
@@ -314,14 +296,14 @@ class Utils
         }
     }
 
-    public static function insertAll($iterator, $insertIndex, $array)
+    public static function insertAll($iterator, $predicate, $array)
     {
-        if ($insertIndex < 0) {
-            $insertIndex = 0;
+        if (!$predicate) {
+            return self::concat($iterator, $array);
         }
         $fire = false;
         foreach ($iterator as $index => $item) {
-            if ($insertIndex == $index) {
+            if (!$fire && $predicate($item, $index)) {
                 $fire = true;
                 yield from $array;
             }

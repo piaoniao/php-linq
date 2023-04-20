@@ -305,35 +305,34 @@ class Linq
     }
 
     /**
-     * @param int   $index
-     * @param mixed $item
+     * @param int|Closure $predicate
+     * @param mixed       $item
      * @return $this
      */
-    public function insert($index, $item)
+    public function insert($predicate, $item)
     {
-        $this->iterator = Utils::insert($this->iterator, $index, $item);
+        if (is_int($predicate)) {
+            $predicate = function ($item, $index) use ($predicate) {
+                return $index == $predicate;
+            };
+        }
+        $this->iterator = Utils::insert($this->iterator, $predicate, $item);
         return $this;
     }
 
     /**
-     * @param mixed   $item
-     * @param Closure $predicate $predicate($item, $index) : bool
-     * @return $this
-     */
-    public function insertWhile($item, Closure $predicate)
-    {
-        $this->iterator = Utils::insertWhile($this->iterator, $item, $predicate);
-        return $this;
-    }
-
-    /**
-     * @param int               $index
+     * @param int|Closure       $predicate
      * @param array|ArrayAccess $array
      * @return $this
      */
-    public function insertAll($index, $array)
+    public function insertAll($predicate, $array)
     {
-        $this->iterator = Utils::insertAll($this->iterator, $index, $array);
+        if (is_int($predicate)) {
+            $predicate = function ($item, $index) use ($predicate) {
+                return $index == $predicate;
+            };
+        }
+        $this->iterator = Utils::insertAll($this->iterator, $predicate, $array);
         return $this;
     }
 

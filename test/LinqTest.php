@@ -623,19 +623,16 @@ class LinqTest extends TestCase
         $this->assertEquals(json_encode($result), json_encode($test));
     }
 
-    // insertWhile
-    public function testInsertWhile()
+    // insert
+    public function testInsert2()
     {
-        $numbers = [1, 5, 9];
+        $numbers = [1, 3, 4];
 
-        $newItem = 4;
-        $test = Linq::from($numbers)
-            ->insertWhile($newItem, function ($item, $index) use ($newItem) {
-                return $newItem < $item;
-            })
-            ->select();
+        $test = Linq::from($numbers)->insert(function ($item, $index) {
+            return $item == 3;
+        }, 2)->select();
 
-        $result = [1, 4, 5, 9];
+        $result = [1, 2, 3, 4];
 
         $this->assertEquals(json_encode($result), json_encode($test));
     }
@@ -648,6 +645,20 @@ class LinqTest extends TestCase
         $test = Linq::from($numbers)->insertAll(2, [7, 8, 9])->select();
 
         $result = [1, 3, 7, 8, 9, 4];
+
+        $this->assertEquals(json_encode($result), json_encode($test));
+    }
+
+    // insertAll
+    public function testInsertAll2()
+    {
+        $numbers = [1, 3, 4];
+
+        $test = Linq::from($numbers)->insertAll(function ($item, $index) {
+            return $item > 1;
+        }, [7, 8, 9])->select();
+
+        $result = [1, 7, 8, 9, 3, 4];
 
         $this->assertEquals(json_encode($result), json_encode($test));
     }
