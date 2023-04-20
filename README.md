@@ -39,7 +39,6 @@
     * append
     * prepend
     * insert
-    * insertWhile
     * insertAll
     * concat
     * distinct
